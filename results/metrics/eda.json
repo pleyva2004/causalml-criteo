@@ -1,0 +1,474 @@
+{
+  "mode": "full",
+  "rows": 13979592,
+  "n_features": 12,
+  "variable_definitions": {
+    "treatment": "Randomized assignment: 1 = user eligible to be targeted by the advertiser's ads, 0 = held-out control.",
+    "exposure": "1 = the user was actually shown at least one ad. Post-randomization and self-selected (depends on auctions and user activity), NOT randomized. Zero for every control user.",
+    "visit": "Outcome: user visited the advertiser's website within the 2-week test window.",
+    "conversion": "Outcome: user converted (purchased) within the 2-week window; implies visit.",
+    "assignment_vs_exposure": "Treated-vs-control is the randomized contrast (intention-to-treat, effect of eligibility). Exposed-vs-unexposed compares self-selected groups and is confounded by user activity."
+  },
+  "feature_types": {
+    "continuous": [
+      "f0",
+      "f2",
+      "f7",
+      "f10"
+    ],
+    "categorical": [
+      "f1",
+      "f3",
+      "f4",
+      "f5",
+      "f6",
+      "f8",
+      "f9",
+      "f11"
+    ]
+  },
+  "dtypes": {
+    "f0": "float64",
+    "f1": "float64",
+    "f2": "float64",
+    "f3": "float64",
+    "f4": "float64",
+    "f5": "float64",
+    "f6": "float64",
+    "f7": "float64",
+    "f8": "float64",
+    "f9": "float64",
+    "f10": "float64",
+    "f11": "float64",
+    "treatment": "int8",
+    "exposure": "int8",
+    "visit": "int8",
+    "conversion": "int8"
+  },
+  "treatment_share": 0.8500001287591226,
+  "rates": {
+    "exposure": {
+      "overall": 0.03063122299992732,
+      "control": 0.0,
+      "treatment": 0.036036727482199896
+    },
+    "visit": {
+      "overall": 0.046992000911042324,
+      "control": 0.03820095691954503,
+      "treatment": 0.048543360048743316
+    },
+    "conversion": {
+      "overall": 0.002916680257907384,
+      "control": 0.0019375880152813366,
+      "treatment": 0.0030894610674129645
+    }
+  },
+  "itt_difference_descriptive": {
+    "visit": {
+      "treated_rate": 0.048543360048743316,
+      "control_rate": 0.03820095691954503,
+      "difference": 0.010342403129198284,
+      "ci_low": 0.010055628213713731,
+      "ci_high": 0.010629178044682837,
+      "relative_lift": 0.27073675539019615
+    },
+    "conversion": {
+      "treated_rate": 0.0030894610674129645,
+      "control_rate": 0.0019375880152813366,
+      "difference": 0.0011518730521316279,
+      "ci_low": 0.0010845057902364738,
+      "ci_high": 0.001219240314026782,
+      "relative_lift": 0.594488117725262
+    }
+  },
+  "target_distribution": [
+    {
+      "variable": "treatment",
+      "n": 13979592,
+      "positives": 11882655,
+      "negatives": 2096937,
+      "positive_rate": 0.8500001287591226,
+      "ci_low": 0.8498128541614626,
+      "ci_high": 0.8501872110034275,
+      "imbalance_ratio": 0.17647041002200267
+    },
+    {
+      "variable": "exposure",
+      "n": 13979592,
+      "positives": 428212,
+      "negatives": 13551380,
+      "positive_rate": 0.03063122299992732,
+      "ci_low": 0.030541022831214192,
+      "ci_high": 0.03072168112471429,
+      "imbalance_ratio": 31.646427470505262
+    },
+    {
+      "variable": "visit",
+      "n": 13979592,
+      "positives": 656929,
+      "negatives": 13322663,
+      "positive_rate": 0.046992000911042324,
+      "ci_low": 0.046881192255273325,
+      "ci_high": 0.04710305853131554,
+      "imbalance_ratio": 20.280217496868
+    },
+    {
+      "variable": "conversion",
+      "n": 13979592,
+      "positives": 40774,
+      "negatives": 13938818,
+      "positive_rate": 0.002916680257907384,
+      "ci_low": 0.0028885474907938166,
+      "ci_high": 0.0029450862124757097,
+      "imbalance_ratio": 341.8555452003728
+    }
+  ],
+  "missing_values": {
+    "f0": 0,
+    "f1": 0,
+    "f2": 0,
+    "f3": 0,
+    "f4": 0,
+    "f5": 0,
+    "f6": 0,
+    "f7": 0,
+    "f8": 0,
+    "f9": 0,
+    "f10": 0,
+    "f11": 0,
+    "treatment": 0,
+    "exposure": 0,
+    "visit": 0,
+    "conversion": 0
+  },
+  "duplicates": {
+    "duplicate_rows_features_and_labels": 1259545,
+    "duplicate_rows_features_only": 1626259
+  },
+  "structural_violations": {
+    "control_exposed": 0,
+    "conversion_without_visit": 0
+  },
+  "suspicious_values": {
+    "interpretation": "Dominant modal point masses are suspected default/missing-value encodings after anonymization; this is an interpretation, the release does not document it.",
+    "mode_share_by_feature": {
+      "f0": 0.2650681793860651,
+      "f1": 0.9876999271509498,
+      "f2": 0.5224350610518533,
+      "f3": 0.818621530585442,
+      "f4": 0.9565869304340212,
+      "f5": 0.9469624721522631,
+      "f6": 0.2650681793860651,
+      "f7": 0.9469624721522631,
+      "f8": 0.5224350610518533,
+      "f9": 0.7949684797667915,
+      "f10": 0.9565869304340212,
+      "f11": 0.9855227534537488
+    },
+    "mode_value_by_feature": {
+      "f0": 12.616364906986497,
+      "f1": 10.059654474774547,
+      "f2": 8.214382844395335,
+      "f3": 4.679881620097284,
+      "f4": 10.280525225748212,
+      "f5": 4.115453421277861,
+      "f6": 0.29444271125560606,
+      "f7": 4.833814577796811,
+      "f8": 3.971857989350875,
+      "f9": 13.190055934673358,
+      "f10": 5.300374864042156,
+      "f11": -0.16867922100056124
+    },
+    "mode_coupling_top_pairs": [
+      {
+        "feature_a": "f2",
+        "feature_b": "f8",
+        "agreement": 1.0,
+        "jaccard": 1.0
+      },
+      {
+        "feature_a": "f0",
+        "feature_b": "f6",
+        "agreement": 1.0,
+        "jaccard": 1.0
+      },
+      {
+        "feature_a": "f5",
+        "feature_b": "f7",
+        "agreement": 1.0,
+        "jaccard": 1.0
+      },
+      {
+        "feature_a": "f4",
+        "feature_b": "f10",
+        "agreement": 1.0,
+        "jaccard": 1.0
+      },
+      {
+        "feature_a": "f1",
+        "feature_b": "f11",
+        "agreement": 0.9764379389613087,
+        "jaccard": 0.97639999891095
+      },
+      {
+        "feature_a": "f10",
+        "feature_b": "f11",
+        "agreement": 0.9710641769802724,
+        "jaccard": 0.9706391121683162
+      }
+    ],
+    "tail_ratio_continuous": {
+      "f0": 0.001533625312305968,
+      "f2": 0.0007439695504109301,
+      "f7": 0.005974678796342242,
+      "f10": 0.011634479270631248
+    }
+  },
+  "exposure_funnel": [
+    {
+      "group": "control",
+      "n": 2096937,
+      "share_of_treated": null,
+      "exposure_count": 0,
+      "exposure_rate": 0.0,
+      "exposure_ci_low": 1.0587911840678754e-22,
+      "exposure_ci_high": 1.831934761698695e-06,
+      "visit_count": 80105,
+      "visit_rate": 0.03820095691954503,
+      "visit_ci_low": 0.03794236310456106,
+      "visit_ci_high": 0.03846124270596889,
+      "conversion_count": 4063,
+      "conversion_rate": 0.0019375880152813366,
+      "conversion_ci_low": 0.0018789732140657579,
+      "conversion_ci_high": 0.0019980276521889364
+    },
+    {
+      "group": "treated",
+      "n": 11882655,
+      "share_of_treated": 1.0,
+      "exposure_count": 428212,
+      "exposure_rate": 0.036036727482199896,
+      "exposure_ci_low": 0.035930904620113266,
+      "exposure_ci_high": 0.03614285032694689,
+      "visit_count": 576824,
+      "visit_rate": 0.048543360048743316,
+      "visit_ci_low": 0.048421311681057684,
+      "visit_ci_high": 0.04866570031273177,
+      "conversion_count": 36711,
+      "conversion_rate": 0.0030894610674129645,
+      "conversion_ci_low": 0.003058066842468579,
+      "conversion_ci_high": 0.0031211765775845616
+    },
+    {
+      "group": "treated_exposed",
+      "n": 428212,
+      "share_of_treated": 0.036036727482199896,
+      "exposure_count": 428212,
+      "exposure_rate": 1.0,
+      "exposure_ci_low": 0.9999910291529439,
+      "exposure_ci_high": 1.0,
+      "visit_count": 177510,
+      "visit_rate": 0.4145376589166114,
+      "visit_ci_low": 0.4130628948431434,
+      "visit_ci_high": 0.4160139563292612,
+      "conversion_count": 23031,
+      "conversion_rate": 0.053784106937685074,
+      "conversion_ci_low": 0.053112421496530414,
+      "conversion_ci_high": 0.05446379824790099
+    },
+    {
+      "group": "treated_unexposed",
+      "n": 11454443,
+      "share_of_treated": 0.9639632725178001,
+      "exposure_count": 0,
+      "exposure_rate": 0.0,
+      "exposure_ci_low": 2.6469779601696886e-23,
+      "exposure_ci_high": 3.3536833981280956e-07,
+      "visit_count": 399314,
+      "visit_rate": 0.034861057844541195,
+      "visit_ci_low": 0.034754988847358635,
+      "visit_ci_high": 0.03496743882747338,
+      "conversion_count": 13680,
+      "conversion_rate": 0.0011942963966034839,
+      "conversion_ci_low": 0.0011744617095160407,
+      "conversion_ci_high": 0.0012144656509723401
+    }
+  ],
+  "balance": {
+    "max_abs_smd": 0.0361845616622584,
+    "max_abs_smd_feature": "f3",
+    "interpretation": "With n=13,979,592 rows even negligible imbalance gives tiny p-values (12 of 12 features have p<0.05), so judge balance by effect size. The largest |SMD| is 0.0362 (f3), within the conventional 0.1 threshold. A perfectly randomized comparison at this n would show |SMD| of order 0.0007 (sqrt(1/n_T+1/n_C)); observed imbalances of 48x that scale are therefore small in size but not sampling noise. Likely cause (interpretation, not documented): the benchmark pools several advertiser tests that were re-sampled to a common treatment ratio, so covariate mix can differ slightly by arm. Downstream causal estimators adjust for covariates.",
+    "table": [
+      {
+        "feature": "f0",
+        "type": "continuous",
+        "mean_treated": 19.61475504093001,
+        "mean_control": 19.651704714743474,
+        "smd": -0.0068656191932508215,
+        "smd_basis": "raw value",
+        "ks_stat": 0.008950155116266678,
+        "ks_pvalue": 1.91347794514673e-124,
+        "chi2_stat": null,
+        "chi2_pvalue": null,
+        "cramers_v": null,
+        "n_levels_tested": null
+      },
+      {
+        "feature": "f1",
+        "type": "categorical",
+        "mean_treated": 10.070336700396355,
+        "mean_control": 10.06793542552677,
+        "smd": 0.025115750284019057,
+        "smd_basis": "max |per-level indicator SMD|",
+        "ks_stat": null,
+        "ks_pvalue": null,
+        "chi2_stat": 1070.1709654403348,
+        "chi2_pvalue": 8.257322587662978e-227,
+        "cramers_v": 0.008749421394354955,
+        "n_levels_tested": 8.0
+      },
+      {
+        "feature": "f2",
+        "type": "continuous",
+        "mean_treated": 8.446301578306452,
+        "mean_control": 8.448173104019592,
+        "smd": -0.0062409892229001495,
+        "smd_basis": "raw value",
+        "ks_stat": 0.0037746191769049142,
+        "ks_pvalue": 1.7457937375559994e-22,
+        "chi2_stat": null,
+        "chi2_pvalue": null,
+        "cramers_v": null,
+        "n_levels_tested": null
+      },
+      {
+        "feature": "f3",
+        "type": "categorical",
+        "mean_treated": 4.169411678368263,
+        "mean_control": 4.232820995845126,
+        "smd": 0.0361845616622584,
+        "smd_basis": "max |per-level indicator SMD|",
+        "ks_stat": null,
+        "ks_pvalue": null,
+        "chi2_stat": 4155.596430482214,
+        "chi2_pvalue": 0.0,
+        "cramers_v": 0.017241277185892627,
+        "n_levels_tested": 105.0
+      },
+      {
+        "feature": "f4",
+        "type": "categorical",
+        "mean_treated": 10.33924522768884,
+        "mean_control": 10.336525673121422,
+        "smd": 0.011948653688748785,
+        "smd_basis": "max |per-level indicator SMD|",
+        "ks_stat": null,
+        "ks_pvalue": null,
+        "chi2_stat": 266.6299065428127,
+        "chi2_pvalue": 1.844613243815034e-44,
+        "cramers_v": 0.004367241235803376,
+        "n_levels_tested": 22.0
+      },
+      {
+        "feature": "f5",
+        "type": "categorical",
+        "mean_treated": 4.026602473376325,
+        "mean_control": 4.039338816423102,
+        "smd": 0.02774944213827703,
+        "smd_basis": "max |per-level indicator SMD|",
+        "ks_stat": null,
+        "ks_pvalue": null,
+        "chi2_stat": 1628.2176768684121,
+        "chi2_pvalue": 0.0,
+        "cramers_v": 0.010792175134715457,
+        "n_levels_tested": 15.0
+      },
+      {
+        "feature": "f6",
+        "type": "categorical",
+        "mean_treated": -4.1827923914504685,
+        "mean_control": -3.9998797255286616,
+        "smd": 0.02020350659351138,
+        "smd_basis": "max |per-level indicator SMD|",
+        "ks_stat": null,
+        "ks_pvalue": null,
+        "chi2_stat": 3824.2096034263886,
+        "chi2_pvalue": 0.0,
+        "cramers_v": 0.016539546431942,
+        "n_levels_tested": 218.0
+      },
+      {
+        "feature": "f7",
+        "type": "continuous",
+        "mean_treated": 5.105555292281528,
+        "mean_control": 5.080284299014889,
+        "smd": 0.021269530040211815,
+        "smd_basis": "raw value",
+        "ks_stat": 0.006098728981307366,
+        "ks_pvalue": 5.198153396782871e-58,
+        "chi2_stat": null,
+        "chi2_pvalue": null,
+        "cramers_v": null,
+        "n_levels_tested": null
+      },
+      {
+        "feature": "f8",
+        "type": "categorical",
+        "mean_treated": 3.933391854158856,
+        "mean_control": 3.93465174741119,
+        "smd": 0.007603901022493154,
+        "smd_basis": "max |per-level indicator SMD|",
+        "ks_stat": null,
+        "ks_pvalue": null,
+        "chi2_stat": 1544.7699711080245,
+        "chi2_pvalue": 2.0983733576911165e-160,
+        "cramers_v": 0.010511983269734633,
+        "n_levels_tested": 318.0
+      },
+      {
+        "feature": "f9",
+        "type": "categorical",
+        "mean_treated": 16.05258874373006,
+        "mean_control": 15.886252509873302,
+        "smd": 0.015989036777076655,
+        "smd_basis": "max |per-level indicator SMD|",
+        "ks_stat": null,
+        "ks_pvalue": null,
+        "chi2_stat": 1208.2088444679512,
+        "chi2_pvalue": 8.730328820294434e-157,
+        "cramers_v": 0.009296591690618026,
+        "n_levels_tested": 169.0
+      },
+      {
+        "feature": "f10",
+        "type": "continuous",
+        "mean_treated": 5.333659813881367,
+        "mean_control": 5.331898099926722,
+        "smd": 0.01056346376139282,
+        "smd_basis": "raw value",
+        "ks_stat": 0.0024145141180100804,
+        "ks_pvalue": 1.8822872812042923e-09,
+        "chi2_stat": null,
+        "chi2_pvalue": null,
+        "cramers_v": null,
+        "n_levels_tested": null
+      },
+      {
+        "feature": "f11",
+        "type": "categorical",
+        "mean_treated": -0.17098480630557866,
+        "mean_control": -0.17086774869134294,
+        "smd": 0.007740346963178303,
+        "smd_basis": "max |per-level indicator SMD|",
+        "ks_stat": null,
+        "ks_pvalue": null,
+        "chi2_stat": 127.68483899736098,
+        "chi2_pvalue": 5.116032128400693e-22,
+        "cramers_v": 0.0030221945518445928,
+        "n_levels_tested": 12.0
+      }
+    ]
+  },
+  "sample_rows_for_histograms_and_correlations": 1000000,
+  "spearman_note": "Hashed categoricals enter as log level-frequency because their numeric order is arbitrary."
+}
