@@ -1,0 +1,17 @@
+# data is downloaded, never committed
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+# python / tooling
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+*.egg-info/
+.DS_Store
+catboost_info/
+# dev-mode outputs are scratch; only full-mode results are committed
+results/dev/

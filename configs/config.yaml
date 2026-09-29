@@ -1,0 +1,187 @@
+# Central configuration. Every stage reads this file; nothing below is hard-coded elsewhere.
+# Paths are relative to the repository root.
+
+seed: 42
+
+compute:
+  n_jobs: 4                        # threads per model fit (LightGBM, forests, EconML)
+
+paths:
+  raw_dir: data/raw
+  processed_dir: data/processed
+  figures_dir: results/figures
+  tables_dir: results/tables
+  metrics_dir: results/metrics
+
+data:
+  # Kaggle mirror of Criteo's v2.1 release (public; the API endpoint serves it without credentials).
+  kaggle_dataset: arashnic/uplift-modeling
+  kaggle_url: https://www.kaggle.com/api/v1/datasets/download/arashnic/uplift-modeling
+  official_url: https://ailab.criteo.com/criteo-uplift-prediction-dataset/
+  csv_name: criteo-uplift-v2.1.csv
+  zip_name: uplift-modeling.zip
+  full_parquet: criteo_full.parquet
+  dev_parquet: criteo_dev.parquet
+  expected_rows: 13979592          # published row count for v2.1; the loader asserts it
+  # Train/validation/test assignment, stratified on treatment x visit x conversion.
+  split_fractions: {train: 0.6, val: 0.2, test: 0.2}
+  # Development mode: a stratified subsample of every split (same split labels as full mode).
+  dev_fraction: 0.05               # ~700K rows
+
+features:
+  # Criteo paper (Diemert et al. 2021, Table 2): 4 continuous features, 8 hashed categoricals
+  # whose values are random projections of the original tokens. Verified on v2.1: the categoricals
+  # have exactly the published cardinalities (60 ... 3,743); the continuous ones have 0.5M-2.2M values.
+  continuous: [f0, f2, f7, f10]
+  categorical: [f1, f3, f4, f5, f6, f8, f9, f11]
+  # Levels seen fewer than this many times in the training split are pooled into "other".
+  min_category_count: 1000
+  # One-hot budget per categorical for the linear design matrix (most frequent levels first).
+  max_onehot_levels: 30
+
+# Evaluation protocol for the predictive (P(conversion | X)) models.
+predictive:
+  target: conversion
+  # Random forest and cross-validation are run on a stratified subsample of the training split;
+  # LightGBM and logistic regression are also refit on the full training split.
+  cv_sample_rows: 2000000
+  rf_train_rows: 2000000
+  cv_folds: 5
+  shap_rows: 20000
+  permutation_rows: 500000
+  calibration_bins: 20
+  bootstrap_reps: 500              # Poisson-bootstrap replicates for test-set CIs of ROC-AUC / PR-AUC
+  top_k_fraction: 0.01             # "flag the top 1% of users by score" operating point (chosen on validation)
+  selection_metric: log_loss       # CV model selection: proper scoring rule, far less noisy than PR-AUC with ~0.3% positives
+  lr_train_rows: 2000000           # logistic regression: linear design on 8.4M rows is ~7 GB, so fit on a stratified subsample
+  lr_max_iter: 300
+  lr_C_grid: [0.01, 0.1, 1.0]      # inverse L2 strength (sum-of-losses convention of sklearn)
+  rf:
+    n_estimators: 200
+    cv_n_estimators: 100           # fewer trees inside CV (selection only needs a relative ranking of configs)
+    max_features: 0.5
+    max_samples: 0.5               # bootstrap fraction per tree; keeps 2M-row forests tractable
+    min_samples_leaf_grid: [20, 100]   # large leaves: with 0.3% positives a small leaf is all-zeros or one-hot noise
+  # Each config: num_leaves x learning_rate, with a fixed tree budget per learning rate inside CV
+  # (no early stopping in CV, so fold scores are not tuned on the held-out fold).
+  lgbm_grid:
+    num_leaves: [31, 63]
+    learning_rate: [0.05, 0.1]
+  lgbm_cv_trees: {"0.05": 400, "0.1": 200}
+  lgbm_max_trees: 2000             # final fit: early stopping on the validation split
+  lgbm_early_stopping_rounds: 50
+  calibration_prob_floor: 1.0e-5   # calibrated probabilities are clipped to [floor, 1 - floor] (isotonic can output exact 0)
+  calibration_selection_folds: 2   # cross-fit on validation to choose sigmoid vs isotonic without in-sample bias
+  permutation_repeats: 3
+  lr_interpret_rows: 1000000       # statsmodels GLM (with CIs) fit on a subsample of the training rows
+  top_features_shown: 15
+
+causal:
+  outcomes: [visit, conversion]
+  bootstrap_reps: 2000
+  crossfit_folds: 5
+  # Causal forest (EconML) is trained on a subsample; see README "Scaling" for timings.
+  causal_forest_train_rows: 1000000
+  meta_learner_train_rows: null    # null = full training split
+
+uplift:
+  budgets: [0.05, 0.10, 0.20, 0.30]
+  curve_points: 100
+  bootstrap_reps: 200
+
+# Decision problem. These are ILLUSTRATIVE business assumptions, not properties of the data:
+# the Criteo release is sub-sampled non-uniformly, so absolute rates are not real-world rates.
+optimization:
+  conversion_value: 50.0           # value of one incremental conversion ($)
+  # cost of treating one user ($). c/V = 0.05/50 = 0.001, just below the blanket-treatment break-even in
+  # this sample (conversion ATE ~0.00115 per user, i.e. c/V ~ 0.00115): treating everyone is then barely
+  # profitable and there is real room for targeting to win. The cost_value_ratios sweep is the actual result.
+  treatment_cost: 0.05
+  cost_value_ratios: [0.0, 0.0002, 0.0005, 0.001, 0.002, 0.005]   # sensitivity sweep
+  bootstrap_reps: 1000             # multinomial (cell-count) bootstrap replicates for policy values
+  ci_level: 0.95
+  default_learner: t_learner       # used only if results/metrics/cate.json has no selected_learner
+  tiebreak_seed_offset: 7          # seed offset for the (label-independent) tie-break permutation and random policy
+  standin_estimators: 150          # trees per model in the dev-only stand-in scores (never used in results/)
+
+robustness:
+  seeds: [0, 1, 2, 3, 4]
+  train_sizes: [100000, 300000, 1000000, 3000000]
+
+# Phase 14 timing runs use fixed, un-tuned settings so every size is comparable.
+scaling:
+  logistic_C: 0.1
+  logistic_max_iter: 300
+  lgbm_n_estimators: 300
+
+# Stage `eda` (Phase 1-2: data understanding and exploratory analysis).
+eda:
+  sample_rows: 1000000             # seeded uniform sample for histograms and Spearman correlations (rates/balance use all rows)
+  ci_alpha: 0.05                   # 95% Wilson intervals
+  min_level_count: 1000            # categorical levels rarer than this are pooled in balance tests / plots
+  top_levels: 8                    # most frequent levels shown per categorical in figures
+  n_bins: 10                       # quantile bins for the conversion-by-feature figure
+  tail_quantile: 0.999             # extreme-tail summary for continuous features
+  smd_thresholds: [0.01, 0.1]      # reference lines on the love plot (tight / conventional)
+
+# Stage `stats` (Phase 3: classical inference on the randomized assignment).
+stats:
+  outcomes: [visit, conversion, exposure]   # exposure = manipulation check (control can never be exposed)
+  alpha: 0.05
+  power: 0.80                      # target power for the minimum detectable effect
+  design_treatment_ratio: 0.85     # Diemert et al. (2021): every test re-sampled to this treatment share
+  # Classifier two-sample test (C2ST) of randomization: predict T from X, score on the held-out test split.
+  c2st_train_rows: 2000000         # training-split subsample for both classifiers (the whole test split is scored)
+  c2st_val_rows: 1000000           # validation-split subsample for LightGBM early stopping
+  c2st_early_stopping_rounds: 50
+  c2st_permutations: 1000          # label permutations for the null distribution of the held-out AUC
+  c2st_logistic_C: 1.0             # inverse L2 strength of the logistic C2ST (linear design is standardized)
+  logistic_max_iter: 500
+  lrt_rows: 1000000                # training-split subsample for the joint likelihood-ratio test (statsmodels Logit)
+  qr_rank_rows: 200000             # rows used to find linearly independent design columns (pivoted QR)
+  roc_points: 400                  # ROC points kept for plotting
+
+# Stage `causal` (Phases 8-9: average effects, propensity scores, exposure IV, observational demo).
+causal_ate:
+  propensity_clip: [0.01, 0.99]
+  ml_rows: null                    # rows for the cross-fitted ML estimators (null = all 14M rows; RCT estimation, not prediction)
+  lgbm_overrides: {n_estimators: 200, learning_rate: 0.1}   # 5-fold cross-fitting x 3 models x 2 outcomes on 11M-row folds
+  logistic_C: 1.0
+  logistic_fit_rows: 1000000       # logistic propensity: rows per training fold (~180 coefficients; saturated well before this)
+  lin_chunk_rows: 250000           # Lin (2013) OLS is accumulated in chunks (the 14M x ~180 design is ~10 GB)
+  obs_demo:
+    seeds: [0, 1, 2, 3, 4, 5, 6, 7]
+    base_rows: 1500000             # uniform draw from the full data per replicate, before confounded selection
+    confounder_candidates: [f0, f2, f7, f10]   # continuous features only (hashed categoricals have no order)
+    control_keep: [1.0, 0.1]       # control keep-probability at the lowest / highest confounder quantile
+    treated_keep_low: 0.5          # treated keep-probability at the lowest quantile; the rest is solved for
+    folds: 3                       # cross-fitting folds inside each replicate
+
+# Stage `cate` (Phases 8, 10-11: CATE meta-learners, causal forest, uplift evaluation, heterogeneity).
+# Training rows: meta-learners use causal.meta_learner_train_rows (null = the whole train split); the causal
+# forest uses causal.causal_forest_train_rows (a seeded uniform draw from the same training rows).
+cate:
+  learners: [s_learner, t_learner, x_learner, dr_learner, causal_forest, class_transformation]
+  # LightGBM base learners (modest, untuned). The number of trees is chosen by early stopping on the
+  # early-stopping half of the validation split; the other half is reserved for model selection.
+  outcome_model: {n_estimators: 1000, learning_rate: 0.05, num_leaves: 63, min_child_samples: 500}
+  # Effect models regress very noisy targets (imputed effects, pseudo-outcomes), so they are more regularised.
+  effect_model: {n_estimators: 1000, learning_rate: 0.03, num_leaves: 31, min_child_samples: 2000, reg_lambda: 10.0}
+  propensity_model: {n_estimators: 500, learning_rate: 0.05, num_leaves: 31, min_child_samples: 2000}
+  early_stopping_rounds: 50
+  crossfit_folds: 2                # DR-learner nuisances and the propensity e(x) are cross-fitted on train
+  propensity_clip: [0.05, 0.95]    # safety bound only; under randomization e(x) stays near 0.85
+  val_selection_share: 0.5         # share of val (hash of row_id) held out from early stopping, used to select learners
+  causal_forest:
+    n_estimators: 200              # must be a multiple of subforest_size (4)
+    min_samples_leaf: 1000         # rare outcomes: leaves need many units for a stable local effect
+    max_samples: 0.45              # per-tree subsample (half of it for splitting, half for honest estimates)
+    cv: 2                          # cross-fitting folds for the DML nuisances
+    nuisance_model: {n_estimators: 200, learning_rate: 0.05, num_leaves: 31, min_child_samples: 500}
+  predict_chunk_rows: 500000
+  calibration_groups: 10           # GATES-style score groups for the calibration table
+  segment_features: 3              # top effect-importance features used for segment-level heterogeneity
+  segment_bins: 5                  # quantile bins (continuous) / most frequent levels (categorical) per feature
+  surrogate_rows: 500000           # val rows used to fit the tau-hat surrogate tree for SHAP effect importance
+  shap_rows: 50000                 # test rows on which surrogate SHAP values are averaged
+  random_scorer_seed_offset: 11    # seed offset for the random-targeting baseline score
