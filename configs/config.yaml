@@ -4,7 +4,7 @@
 seed: 42
 
 compute:
-  n_jobs: 4                        # threads per model fit (LightGBM, forests, EconML)
+  n_jobs: 12                       # threads per model fit (LightGBM, forests, EconML); 4 while stages ran concurrently
 
 paths:
   raw_dir: data/raw
@@ -107,7 +107,7 @@ optimization:
   standin_estimators: 150          # trees per model in the dev-only stand-in scores (never used in results/)
 
 robustness:
-  seeds: [0, 1, 2, 3, 4]
+  seeds: [0, 1, 2]                 # 0 must be included: its fit is reused as the full-size learning-curve point
   train_sizes: [100000, 300000, 1000000, 3000000]
   learners: {}                     # outcome -> learner override; empty = the learner selected on validation (cate.json)
   corr_rows: 500000                # test rows used for tau-hat rank correlations
