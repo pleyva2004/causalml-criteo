@@ -1,0 +1,61 @@
+\section{Introduction}
+
+An advertiser with a limited budget has to decide whom to show an ad to. The
+habitual answer is to rank users by their probability of converting and
+treat from the top. That ranking answers a \emph{predictive} question: who is
+likely to buy? The decision the advertiser actually faces is \emph{causal}:
+whose behaviour does the ad change? A user with a 40\,\% chance of buying
+anyway is a poor target if the ad moves that chance to 41\,\%, and a user
+with a 2\,\% chance who moves to 6\,\% is a good one. Ranking by response and
+ranking by effect coincide only if the ad's lift is constant, or
+proportional to baseline propensity in a way that preserves the ordering.
+
+This paper asks a narrow empirical question on a public benchmark: can we
+identify users who convert \emph{because of} an ad, rather than users who
+would have converted anyway, and does targeting them beat targeting the
+likeliest converters?
+
+We work on the Criteo Uplift Prediction dataset \cite{diemert2021}, 13,979,592
+users pooled from several advertisers' randomized incrementality tests, with
+a binary treatment (ad eligibility), two outcomes (site visit and
+conversion), and 12 anonymized features. Rather than fit a single uplift
+model, we run the whole classical statistical-ML workflow on one fixed
+train/validation/test protocol, so that every stage is checked against the
+stages before it.
+
+Our findings, each with a confidence interval in Section~\ref{sec:experiments}:
+\begin{itemize}
+  \item \textbf{Randomization is imperfect and it matters.} Treatment is
+        weakly predictable from features, and the imbalance correlates with
+        outcomes. Covariate-adjusted ATE estimators agree with each other
+        and sit well below the raw difference.
+  \item \textbf{Assignment is not exposure.} Only 3.6\,\% of eligible users
+        were shown an ad. The naive exposed-versus-control contrast is
+        confounded by user activity; an instrumental-variable estimate is
+        not.
+  \item \textbf{Uplift targeting wins for visits, not for conversions.} At a
+        5\,\% budget the X-learner finds about 60\,\% more incremental visits
+        than a response model. For conversions, the response model is never
+        beaten, and the causal forest is significantly worse on Qini.
+\end{itemize}
+
+\paragraph{Contributions.} This paper makes three contributions:
+\begin{enumerate}
+  \item An end-to-end, reproducible analysis of the Criteo v2.1 benchmark on
+        the full 14M rows, with bootstrap intervals on every headline number
+        and a test split that is touched once.
+  \item A careful treatment of the gap between randomized \emph{assignment}
+        and actual \emph{exposure}, and of imbalance in the pooled
+        benchmark, which together change the reported effect sizes by up to
+        28\,\%.
+  \item A direct, budget-matched comparison of uplift and response targeting
+        that locates \emph{where} uplift modeling helps (visits at small
+        budgets, with at least 3M training rows) and where it does not
+        (conversions).
+\end{enumerate}
+
+\paragraph{Roadmap.} Section~\ref{sec:related} surveys related work.
+Section~\ref{sec:method} describes the data, protocol, and estimators.
+Section~\ref{sec:experiments} reports results. Section~\ref{sec:discussion}
+interprets them and lists limitations, and Section~\ref{sec:conclusion}
+concludes with future work.

@@ -1,0 +1,102 @@
+% arxiv-style.sty
+% Minimal single-column arXiv-style preprint layout, compatible with the
+% widely used kourgeorge/arxiv-style template by convention.
+% This is a clean, dependency-light reimplementation written for
+% scholastic-llm/paper. It only relies on standard CTAN packages.
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{arxiv-style}[2026/05/20 arXiv-style single-column preprint]
+
+%--- geometry ---------------------------------------------------------------
+\RequirePackage[a4paper,
+  left=1.0in, right=1.0in,
+  top=1.0in,  bottom=1.0in,
+  headheight=14pt]{geometry}
+
+%--- typography -------------------------------------------------------------
+\RequirePackage[T1]{fontenc}
+\RequirePackage[utf8]{inputenc}
+\RequirePackage{lmodern}
+\RequirePackage{microtype}
+
+%--- spacing ----------------------------------------------------------------
+\RequirePackage{setspace}
+\setstretch{1.05}
+\setlength{\parskip}{0.4em}
+\setlength{\parindent}{1.2em}
+
+%--- math + symbols ---------------------------------------------------------
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
+\RequirePackage{amsfonts}
+\RequirePackage{mathtools}
+
+%--- color, links -----------------------------------------------------------
+\RequirePackage{xcolor}
+\definecolor{arxivblue}{HTML}{1F4E79}
+\definecolor{arxivgray}{HTML}{4D4D4D}
+\RequirePackage[hidelinks,
+                colorlinks=true,
+                linkcolor=arxivblue,
+                citecolor=arxivblue,
+                urlcolor=arxivblue]{hyperref}
+
+%--- captions ---------------------------------------------------------------
+\RequirePackage[font=small,labelfont=bf]{caption}
+
+%--- floats / figures / tables ----------------------------------------------
+\RequirePackage{graphicx}
+\RequirePackage{booktabs}
+\RequirePackage{array}
+\RequirePackage{longtable}
+\RequirePackage{float}
+
+%--- lists ------------------------------------------------------------------
+\RequirePackage{enumitem}
+\setlist{nosep,leftmargin=*}
+
+%--- headers + footers ------------------------------------------------------
+\RequirePackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.3pt}
+\fancyhead[L]{\small\itshape\headertitle}
+\fancyhead[R]{\small\thepage}
+
+% allow caller to override the running header
+\newcommand{\headertitle}{A Preprint}
+\providecommand{\runningtitle}[1]{\renewcommand{\headertitle}{#1}}
+
+%--- title block ------------------------------------------------------------
+\renewcommand{\maketitle}{%
+  \begingroup
+  \begin{center}
+    {\LARGE\bfseries \@title \par}\vspace{1.2em}
+    {\large \@author \par}\vspace{0.4em}
+    {\normalsize \@date \par}
+  \end{center}
+  \vspace{0.8em}
+  \endgroup
+}
+
+%--- abstract ---------------------------------------------------------------
+\renewenvironment{abstract}{%
+  \begin{center}\large\bfseries Abstract\end{center}
+  \begin{quote}\noindent\ignorespaces
+}{%
+  \end{quote}\vspace{0.6em}\hrule\vspace{0.4em}
+}
+
+%--- section headings -------------------------------------------------------
+\RequirePackage{titlesec}
+\titleformat{\section}{\Large\bfseries\color{arxivgray}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries\color{arxivgray}}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{arxivgray}}{\thesubsubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{1.6em}{0.6em}
+\titlespacing*{\subsection}{0pt}{1.1em}{0.4em}
+
+%--- todo command (lightweight; no external package) ------------------------
+\providecommand{\todo}[1]{{\color{red}\textbf{[TODO: #1]}}}
+
+%--- end of style -----------------------------------------------------------
+\endinput

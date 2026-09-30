@@ -1,0 +1,36 @@
+\begin{tikzpicture}[
+    >=Stealth,
+    box/.style={
+      rectangle,
+      rounded corners=3pt,
+      draw=black!60,
+      fill=blue!4,
+      minimum height=1.45cm,
+      minimum width=2.4cm,
+      align=center,
+      inner sep=4pt,
+      text width=2.2cm,
+      font=\small
+    },
+    arrow/.style={->, thick, draw=black!60, shorten <=1pt, shorten >=1pt},
+    node distance=0.35cm
+  ]
+
+  \node[box] (data)    {\textbf{Data}\\[2pt]\footnotesize 14.0M users,\\ 60/20/20 split};
+  \node[box, right=of data]    (eda)     {\textbf{EDA + tests}\\[2pt]\footnotesize rates, balance,\\ C2ST};
+  \node[box, right=of eda]     (pred)    {\textbf{Predict}\\[2pt]\footnotesize LR, RF, LightGBM,\\ calibration};
+  \node[box, right=of pred]    (ate)     {\textbf{ATE}\\[2pt]\footnotesize DiM, Lin, IPW,\\ AIPW, IV};
+  \node[box, below=0.6cm of data]   (cate)    {\textbf{CATE / uplift}\\[2pt]\footnotesize S/T/X/DR,\\ causal forest};
+  \node[box, right=of cate]    (policy)  {\textbf{Policy}\\[2pt]\footnotesize budgeted\\ targeting};
+  \node[box, right=of policy]  (robust)  {\textbf{Robustness}\\[2pt]\footnotesize seeds, halves,\\ learning curve};
+  \node[box, right=of robust]  (scale)   {\textbf{Scaling}\\[2pt]\footnotesize time, memory,\\ rows};
+
+  \draw[arrow] (data) -- (eda);
+  \draw[arrow] (eda)  -- (pred);
+  \draw[arrow] (pred) -- (ate);
+  \draw[arrow] (ate.south) -- ++(0,-0.3) -| ($(data.south)!0.5!(cate.north)$) -- (cate.north);
+  \draw[arrow] (cate) -- (policy);
+  \draw[arrow] (policy) -- (robust);
+  \draw[arrow] (robust) -- (scale);
+
+\end{tikzpicture}

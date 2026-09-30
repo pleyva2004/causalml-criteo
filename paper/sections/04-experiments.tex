@@ -1,0 +1,314 @@
+\section{Experiments}
+\label{sec:experiments}
+
+All numbers are read from \texttt{results/} and were produced by the full
+pipeline on the complete dataset. Percentage points are abbreviated pp.
+
+\subsection{Setup}
+\label{sec:setup}
+
+Hardware is an Apple M4 Pro with 48\,GB of memory and 12 threads. Seeds,
+splits, and sample sizes are fixed in a single configuration file. The
+development mode (a 5\,\% sample) runs the whole pipeline in minutes and is
+used only for debugging; it is not reported.
+
+\subsection{Classical tests and covariate balance}
+\label{sec:classical}
+
+On all 14M users, treated users visit more (4.854\,\% versus 3.820\,\%,
++1.034\,pp [1.006, 1.063]) and convert more (0.309\,\% versus 0.194\,\%,
++0.115\,pp [0.108, 0.122], a relative lift of +59.4\,\% [54.4, 64.7]). The
+null $p_T=p_C$ is rejected for both outcomes ($p<10^{-170}$), and exact
+bootstrap intervals (2,000 draws) match the Wald ones. These are the
+\emph{naive} effects.
+
+Under clean randomization, features should not predict treatment. They do,
+weakly: a classifier two-sample test has AUC 0.509 [0.508, 0.510] (permutation
+$p=0.001$) and a joint likelihood-ratio test gives $p=2\times10^{-53}$. The
+imbalance is correlated with the outcomes, which is why the next section
+adjusts for covariates.
+
+\subsection{Average treatment effects}
+\label{sec:ate}
+
+Table~\ref{tab:ate} reports the ATE estimators. Every covariate-adjusted
+estimator sits well below the difference in means, and they agree with each
+other. The doubly robust estimate of the visit effect (+0.746\,pp) is 28\,\%
+below the raw one; for conversion (+0.100\,pp) the reduction is 13\,\%.
+
+\begin{table}[H]
+\centering
+\caption{ATE estimates in percentage points on all 14M users, with 95\,\%
+confidence intervals. g-computation has no interval reported.}
+\label{tab:ate}
+\small
+\begin{tabular}{l r r}
+\toprule
+\textbf{Estimator} & \textbf{Visit} & \textbf{Conversion} \\
+\midrule
+Difference in means & 1.034 [1.006, 1.063] & 0.1152 [0.1085, 0.1219] \\
+Lin regression adjustment & 0.752 [0.726, 0.777] & 0.0990 [0.0923, 0.1056] \\
+IPW, H{\'a}jek, LightGBM propensity & 0.761 [0.731, 0.791] & 0.1007 [0.0935, 0.1079] \\
+\textbf{AIPW (doubly robust)} & \textbf{0.746 [0.721, 0.771]} & \textbf{0.1000 [0.0932, 0.1067]} \\
+g-computation (S-learner) & 0.733 & 0.0977 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Observational demonstration.} To check that adjustment does what
+it claims, we make a confounded dataset out of the experiment: users are
+dropped with a probability that depends on a feature and on treatment, over
+16 replicates. The naive difference then reads 2.19\,pp for visits, with 0\,\%
+interval coverage of the full-data AIPW answer. AIPW recovers 0.749\,pp
+(coverage 88\,\%) and Lin regression 0.748\,pp.
+
+\subsection{Assignment versus exposure}
+\label{sec:exposure}
+
+Only 3.6\,\% of ad-eligible users were shown an ad. The naive exposed-versus-control
+contrast (+37.6\,pp on visits) is confounded by user activity: active users
+are more likely to be exposed. Using randomized assignment as an instrument,
+the covariate-adjusted effect of actually seeing an ad is +21.2\,pp
+[20.5, 21.9] on visits and +2.84\,pp [2.65, 3.03] on conversions among
+exposed users.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\linewidth]{causal_exposure_iv.png}
+\caption{Effect of actually seeing an ad, using assignment as an instrument,
+compared with naive exposure contrasts.}
+\label{fig:exposure}
+\end{figure}
+
+\subsection{Predictive models}
+\label{sec:predictive-results}
+
+\begin{table}[H]
+\centering
+\caption{Predictive models on the test split (2.8M users, base rate 0.29\,\%).
+Brackets are 95\,\% bootstrap intervals.}
+\label{tab:predict}
+\small
+\setlength{\tabcolsep}{5pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{l c c c c c}
+\toprule
+\textbf{Model} & \textbf{ROC-AUC} & \textbf{PR-AUC} & \textbf{Log loss} & \textbf{Brier} & \textbf{Pred./base} \\
+\midrule
+Logistic regression & 0.956 [0.953, 0.958] & 0.214 [0.205, 0.224] & 0.01202 & 0.00253 & 1.00 \\
+Random forest & 0.953 [0.951, 0.956] & 0.227 [0.217, 0.236] & 0.01204 & 0.00250 & 0.99 \\
+\textbf{LightGBM} & \textbf{0.958 [0.956, 0.960]} & \textbf{0.226 [0.217, 0.236]} & \textbf{0.01181} & 0.00251 & 1.00 \\
+LightGBM, \texttt{scale\_pos\_weight}=342 & 0.873 & 0.044 & 1.332 & 0.086 & 51.1 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+LightGBM beats logistic regression by a small but significant margin (paired
+bootstrap: ROC-AUC +0.0022 [0.0017, 0.0027], PR-AUC +0.012 [0.008, 0.016])
+and ties the random forest on PR-AUC. The unweighted models are already
+calibrated: Platt and isotonic calibration change log loss by at most 0.0001.
+Class weighting hurts ranking as well as calibration. Flagging the top 1\,\%
+of users catches 54\,\% of converters at 15.7\,\% precision, 54 times the base
+rate. Fourteen percent of test rows share a feature vector with a training
+row, but they hold only 32 of 8,155 test conversions, and excluding them
+leaves the metrics unchanged.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\linewidth]{predict_roc_pr.png}
+\caption{ROC and precision-recall curves. Precision-recall is the honest view
+of a 0.3\,\% event; ROC-AUC looks strong because negatives dominate.}
+\label{fig:rocpr}
+\end{figure}
+
+\subsection{Uplift models}
+\label{sec:uplift}
+
+Table~\ref{tab:qini} gives normalized Qini coefficients. On visits, the DR-
+and S-learners beat the response model (+0.0052 [0.0022, 0.0082] and +0.0048
+[0.0011, 0.0082]). On conversions, every learner ties or trails it, and the
+causal forest is significantly worse ($-0.0079$ [$-0.0132$, $-0.0030$]).
+
+\begin{table}[H]
+\centering
+\caption{Normalized Qini coefficient on the test split,
+propensity-weighted, 95\,\% bootstrap intervals.}
+\label{tab:qini}
+\small
+\begin{tabular}{l c c}
+\toprule
+\textbf{Scorer} & \textbf{Visit} & \textbf{Conversion} \\
+\midrule
+S-learner & 0.0777 [0.0723, 0.0836] & 0.1737 [0.1441, 0.2082] \\
+T-learner & 0.0713 [0.0659, 0.0773] & 0.1339 [0.1040, 0.1640] \\
+X-learner & 0.0773 [0.0718, 0.0842] & 0.1733 [0.1430, 0.2077] \\
+DR-learner & 0.0781 [0.0721, 0.0846] & 0.1694 [0.1360, 0.2032] \\
+Causal forest & 0.0740 [0.0689, 0.0803] & 0.1736 [0.1446, 0.2094] \\
+Transformed outcome & 0.0745 [0.0685, 0.0803] & 0.1724 [0.1429, 0.2036] \\
+Response model $P(Y\mid X)$ & 0.0729 [0.0671, 0.0793] & \textbf{0.1815 [0.1513, 0.2151]} \\
+Random & $-0.0006$ & 0.0048 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The BLP heterogeneity test finds real heterogeneity for every learner
+($p\le2\times10^{-8}$), and the S-learner's visit slope is 1.02 [0.95, 1.09],
+meaning well-calibrated effect scores. Negative predictions are noise: users
+predicted to be \emph{hurt} by the ad (23\,\% of users under the T-learner)
+have a positive observed effect (+0.13\,pp [0.003, 0.26] on visits).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\linewidth]{cate_qini_curves.png}
+\caption{Qini curves on the 2.8M-user test split.}
+\label{fig:qini}
+\end{figure}
+
+\subsection{The central experiment: uplift versus response targeting}
+\label{sec:central}
+
+Table~\ref{tab:diff} gives incremental outcomes of uplift targeting minus
+response targeting at matched budgets. For visits, uplift targeting at a
+5\,\% budget finds 13,624 [12,612, 14,555] incremental visits against 8,542
+[7,418, 9,674] for the response model, a gain of +5,083 [3,960, 6,098], about
+60\,\%. Of the visits in the response model's top 5\,\%, 88\,\% would have
+happened without the ad; for the uplift model's top 5\,\% the figure is 73\,\%.
+The advantage persists at 10\,\% and is gone by 20--30\,\%. For conversions,
+uplift is never significantly ahead.
+
+\begin{table}[H]
+\centering
+\caption{Incremental outcomes on the test split, \textbf{uplift minus response
+targeting} (95\,\% intervals). Visit uses the X-learner, conversion the
+causal forest.}
+\label{tab:diff}
+\small
+\begin{tabular}{l r r}
+\toprule
+\textbf{Budget} & \textbf{Visit} & \textbf{Conversion} \\
+\midrule
+Top 5\,\%  & \textbf{+5,083 [3,960, 6,098]} & $-42$ [$-151$, 65] \\
+Top 10\,\% & \textbf{+2,862 [1,953, 3,840]} & $-76$ [$-162$, 24] \\
+Top 20\,\% & +545 [$-303$, 1,335] & $-71$ [$-127$, 5] \\
+Top 30\,\% & $-258$ [$-1{,}040$, 559] & $-53$ [$-104$, 9] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\linewidth]{cate_response_vs_uplift.png}
+\caption{Uplift versus conversion-probability targeting, by budget.}
+\label{fig:central}
+\end{figure}
+
+The share of conversions that would have happened anyway is flat, about
+67\,\%, across score groups. The ad lifts conversion roughly in proportion to
+baseline propensity, so the likeliest converters are also among the most
+incremental.
+
+\subsection{Targeting policies}
+\label{sec:policies}
+
+Table~\ref{tab:policy} compares policies on incremental conversions per 100K
+users. Treating the top 10\,\% by conversion probability yields 89.5
+[73.1, 104.3], against 100.4 [84.6, 114.7] for treating everyone: about 89\,\%
+of the lift at a tenth of the treatment volume.
+
+\begin{table}[H]
+\centering
+\caption{Incremental conversions per 100K users, test split,
+propensity-weighted.}
+\label{tab:policy}
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{l r r r r}
+\toprule
+\textbf{Policy} & \textbf{5\,\%} & \textbf{10\,\%} & \textbf{20\,\%} & \textbf{Treat all} \\
+\midrule
+Random & 5.9 [2.2, 9.5] & 12.3 [7.2, 16.8] & 22.9 [16.1, 29.5] & 100.4 [84.6, 114.7] \\
+Highest conversion probability & 81.2 [67.2, 95.1] & 89.5 [73.1, 104.3] & 95.9 [81.1, 110.0] & \\
+Highest estimated uplift & 79.7 [66.5, 93.2] & 86.8 [71.5, 101.2] & 93.3 [78.9, 107.2] & \\
+Highest expected value & 79.7 & 86.8 & 92.5 (treats 16.7\,\%) & \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+With the budget chosen on validation, the economics favor targeting
+(Table~\ref{tab:value}). At a cost-to-value ratio of 0.001, blanket treatment
+nets about \$22 per 100K users, while response targeting at an 11\,\% budget
+nets \$4,051 [3,330, 4,777].
+
+\begin{table}[H]
+\centering
+\caption{Net value per 100K users, budget chosen on validation.}
+\label{tab:value}
+\small
+\begin{tabular}{r l r r r}
+\toprule
+\textbf{Cost/value} & \textbf{Best policy} & \textbf{Budget} & \textbf{Net value} & \textbf{Treat all} \\
+\midrule
+0.0002 & Response & 31\,\% & \$4,628 & \$4,022 \\
+0.0010 & Response & 11\,\% & \$4,051 [3,330, 4,777] & \$22 [$-790$, 758] \\
+0.0020 & Response & 6\,\%  & \$3,634 & $-\$4{,}978$ \\
+0.0050 & Response & 3\,\%  & \$2,775 & $-\$19{,}978$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\linewidth]{targeting_incremental_vs_budget.png}
+\caption{Incremental outcomes by treatment budget for each policy.}
+\label{fig:targeting}
+\end{figure}
+
+\subsection{Robustness}
+\label{sec:robustness}
+
+Table~\ref{tab:robust} checks that the central result is not a seed or split
+artifact. The visit advantage is stable (+2,893, SD 144, always positive over
+three seeds) while the conversion deficit is small and consistently negative.
+Conversion effect scores are much less stable than visit scores (rank
+correlation between seeds 0.49 versus 0.98), as expected from a 0.3\,\% event.
+
+\begin{table}[H]
+\centering
+\caption{Robustness of the uplift-versus-response comparison.}
+\label{tab:robust}
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{l r r}
+\toprule
+ & \textbf{Visit (X-learner)} & \textbf{Conv. (causal forest)} \\
+\midrule
+Uplift $-$ response at 10\,\%, over 3 seeds & +2,893 (SD 144), always $>0$ & $-78$ (SD 14), always $<0$ \\
+$\hat\tau$ rank correlation between seeds & 0.98 & 0.49 \\
+$\hat\tau$ rank correlation between disjoint halves & 0.82 & 0.40 \\
+Top-10\,\% set overlap between halves (Jaccard) & 0.70 & 0.68 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+The X-learner's visit Qini passes the response model's only with at least 3M
+training rows (Figure~\ref{fig:learning}), echoing the dataset authors'
+finding that uplift needs very large samples. The pooled conversion model
+ranks equally well in each randomized arm (ROC-AUC 0.959 control, 0.958
+treated) but, never having seen treatment, over-predicts conversion within
+control by 38\,\% and under-predicts within the treated arm by 4\,\%.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{robustness_learning_curve.png}
+\caption{Visit learning curve: how much data uplift ranking needs before it
+overtakes the response model.}
+\label{fig:learning}
+\end{figure}
+
+\subsection{Scaling}
+\label{sec:scaling}
+
+On all 8.39M training rows, logistic regression fits in 7.5\,s and peaks at
+18.4\,GB, while LightGBM (300 trees) fits in 18.5\,s and peaks at 7.9\,GB,
+with test PR-AUC 0.214 versus 0.224. LightGBM overtakes logistic regression on PR-AUC only above about
+3M training rows. The full pipeline takes about 1.5--2 hours on this machine.
