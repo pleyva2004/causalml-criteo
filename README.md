@@ -2,18 +2,43 @@
 
 **Can we identify users who convert *because of* an ad, rather than users who would have converted anyway?**
 
+📄 **Paper:** *Who Converts Because of the Ad? Uplift Targeting versus Response Targeting on 14 Million Criteo Users*
+([PDF](paper/main.pdf) · [LaTeX source](paper/main.tex)).
+
+![Uplift vs response targeting](results/figures/cate_response_vs_uplift.png)
+
+*The central experiment, on 2.8M held-out users. Orange (uplift model) sits far above blue (likeliest responders) for
+visits at small budgets (top left, bottom left); for conversions the two are indistinguishable (right).*
+
+## The answer in 30 seconds
+
+- **Visits: yes.** Targeting the top 5% by estimated uplift finds **~60% more incremental visits** than targeting the
+  likeliest visitors (+5,083 [3,960, 6,098]). Most of the likeliest visitors would have visited anyway.
+- **Conversions: no.** No uplift model beats ranking by conversion probability. The ad lifts conversion roughly in
+  proportion to baseline propensity, so the likeliest converters are also the most incremental.
+- **Targeting still pays.** Ten percent of users captures ~89% of the lift from treating everyone.
+- **The raw A/B difference overstates the ad's effect** by 13–28%, because randomization in this pooled benchmark is
+  imperfect. Adjusted estimators correct it:
+
+![ATE estimators vs the raw difference in means](results/figures/causal_forest.png)
+
+*Every covariate-adjusted estimator (top-to-bottom: regression, IPW, doubly robust) lands well below the raw
+difference in means (dashed line).*
+
+![Incremental conversions by targeting budget](results/figures/targeting_incremental_vs_budget.png)
+
+*Ranking users by any model recovers most of the incremental conversions within the first 5–10% of the budget
+(~80 of ~100 per 100K users at 5%). Random targeting (dashed) needs the whole population to catch up.*
+
 This repository works through the full classical statistical-ML workflow on 13,979,592 users from Criteo's randomized
-advertising incrementality tests:
+advertising incrementality tests: exploratory analysis and hypothesis tests, predictive models of P(conversion | X),
+average-treatment-effect estimators and propensity scores, heterogeneous-effect (CATE) and uplift models, and a
+budget-constrained targeting optimizer. Every number below is read from `results/` and was produced by `make all` on
+the full dataset. No LLMs, embeddings or generative models are used anywhere.
 
-- exploratory analysis and hypothesis tests
-- predictive models of P(conversion | X), with calibration and interpretation
-- average-treatment-effect estimators and propensity scores
-- heterogeneous-effect (CATE) and uplift models
-- a budget-constrained targeting optimizer
-
-The central experiment compares targeting the users most likely to convert against targeting the users whose
-behaviour the ad changes most. Every number below is read from `results/` and was produced by `make all` on the full
-dataset. No LLMs, embeddings or generative models are used anywhere.
+**Contents:** [Key findings](#key-findings) · [Dataset](#dataset) · [Methodology](#methodology) ·
+[Models](#models) · [Results](#results) · [More figures](#more-figures) · [Reproduce](#reproduce) ·
+[Limitations](#limitations)
 
 ## Key findings
 
@@ -238,16 +263,15 @@ Net value per 100K users, with the budget chosen on validation:
 LightGBM overtakes logistic regression on PR-AUC only above ~3M training rows. The full pipeline
 (`make all`) takes about 1.5–2 hours on this machine; the development mode (`MODE=dev`, 5% sample) takes minutes.
 
-## Visualizations
+## More figures
+
+The three headline figures are at the top. Supporting ones:
 
 **Precision-recall is the honest view of a 0.3% event.** ROC-AUC looks strong only because negatives dominate.
 ![ROC and PR curves](results/figures/predict_roc_pr.png)
 
 **Calibration.** Calibrators are fit on validation and evaluated on test.
 ![Calibration](results/figures/predict_calibration_methods.png)
-
-**Every covariate-adjusted estimator disagrees with the raw difference in means.**
-![ATE estimators](results/figures/causal_forest.png)
 
 **Effect of actually seeing an ad, versus naive exposure comparisons.**
 ![Exposure IV](results/figures/causal_exposure_iv.png)
@@ -257,12 +281,6 @@ LightGBM overtakes logistic regression on PR-AUC only above ~3M training rows. T
 
 **Qini curves on the 2.8M-user test split.**
 ![Qini curves](results/figures/cate_qini_curves.png)
-
-**The central experiment: uplift vs conversion-probability targeting.**
-![Response vs uplift](results/figures/cate_response_vs_uplift.png)
-
-**Targeting policies by budget.**
-![Targeting](results/figures/targeting_incremental_vs_budget.png)
 
 **How much data uplift ranking needs.**
 ![Learning curve](results/figures/robustness_learning_curve.png)
