@@ -1,0 +1,1859 @@
+{
+  "mode": "full",
+  "n_rows": 13979592,
+  "alpha": 0.05,
+  "identification": "By design, treatment is randomized assignment (ad eligibility), so T is independent of the potential outcomes (Y(0), Y(1)) and of X. Then E[Y|T=1] = E[Y(1)|T=1] = E[Y(1)] and E[Y|T=0] = E[Y(0)], and the difference in means E[Y|T=1] - E[Y|T=0] is an unbiased estimate of the ATE of assignment (the intention-to-treat effect) with no model of Y. SUTVA (no interference between users, one version of treatment) is also required. If randomization holds, covariates are not needed for identification and regression, IPW and AIPW only change the variance; if T depends on X in the sample (see the randomization checks), the difference in means can be biased and adjustment for X (under ignorability given X) becomes necessary rather than optional.",
+  "caveat": "Rates and effects are properties of this benchmark sample: the release is non-uniformly sub-sampled, so they are not real-world incrementality.",
+  "note_on_sample": "RCT estimators use every row: this is estimation of one population quantity, not prediction, so there is no train/test split to respect. Cross-fitting plays the role of the held-out split for the ML nuisance models.",
+  "ml_sample": "all rows (n=13,979,592)",
+  "crossfit_folds": 5,
+  "lgbm_overrides": {
+    "n_estimators": 400,
+    "learning_rate": 0.1,
+    "n_jobs": 6
+  },
+  "nuisance_tuning": {
+    "early_stopping_rounds": 30,
+    "inner_val_frac": 0.1,
+    "trees": {
+      "propensity": [
+        32,
+        39,
+        44,
+        41,
+        40
+      ],
+      "exposure": {
+        "mu1": [
+          312,
+          332,
+          399,
+          277,
+          358
+        ]
+      },
+      "outcome_visit": {
+        "mu1": [
+          193,
+          238,
+          319,
+          110,
+          248
+        ],
+        "mu0": [
+          63,
+          54,
+          102,
+          63,
+          63
+        ],
+        "s_learner": [
+          400,
+          325,
+          186,
+          166,
+          242
+        ]
+      },
+      "outcome_conversion": {
+        "mu1": [
+          400,
+          386,
+          159,
+          262,
+          232
+        ],
+        "mu0": [
+          39,
+          39,
+          181,
+          65,
+          35
+        ],
+        "s_learner": [
+          256,
+          206,
+          247,
+          255,
+          205
+        ]
+      }
+    },
+    "note": "tree counts chosen by early stopping on a random inner split of each training fold; the held-out fold is never used for fitting or tuning"
+  },
+  "linear_design_columns": 176,
+  "primary": {
+    "estimator": "aipw_lgbm",
+    "imbalance_detected": true,
+    "propensity_auc_lightgbm": 0.5103882113411075,
+    "propensity_auc_ci95": [
+      0.5099682287637253,
+      0.5108081939184896
+    ],
+    "rule": "Decision rule (fixed after the dev-mode balance checks flagged imbalance, before the full run): if the cross-fitted LightGBM propensity separates the arms (DeLong 95% CI of its AUC excludes 0.5), AIPW with the estimated propensity is the primary ATE -- it removes bias from the observed covariate imbalance under ignorability given X -- and the difference in means is the reference. Otherwise the difference in means is primary.",
+    "estimates": {
+      "visit": {
+        "estimate": 0.00746115646659985,
+        "se": 0.00012760940915320182,
+        "ci95": [
+          0.007211046620571138,
+          0.0077112663126285615
+        ],
+        "n": 13979592,
+        "relative_lift": {
+          "estimate": 0.18442332977771536,
+          "se": 0.00365016254286147,
+          "ci95": [
+            0.17726914265598973,
+            0.191577516899441
+          ],
+          "mean_y1": 0.0479178409630394,
+          "mean_y0": 0.04045668449643955
+        },
+        "se_ratio_vs_dim": 0.8721466969523908
+      },
+      "conversion": {
+        "estimate": 0.0009995824385001337,
+        "se": 3.444580930950269e-05,
+        "ci95": [
+          0.000932069892835174,
+          0.0010670949841650936
+        ],
+        "n": 13979592,
+        "relative_lift": {
+          "estimate": 0.4880919630207581,
+          "se": 0.02373014545363148,
+          "ci95": [
+            0.44158173258374345,
+            0.5346021934577727
+          ],
+          "mean_y1": 0.00304752117593356,
+          "mean_y0": 0.002047938737433426
+        },
+        "se_ratio_vs_dim": 1.0021563972817342
+      }
+    }
+  },
+  "implication": {
+    "text": "Treatment was randomized within each advertiser test, but in the pooled benchmark T is weakly predictable from X and the imbalance is prognostic (treated users have higher predicted baseline outcomes, so the difference in means overstates the effect of assignment). The data behave like a conditionally randomized (stratified) experiment: identification needs T indep. (Y(0), Y(1)) | X. visit: AIPW 0.7461 pp (95% CI 0.7211-0.7711) vs difference in means 1.0342 pp; DiM - AIPW = 0.2881 pp (paired SE 0.0084, z = 34.4), i.e. the adjusted effect is 28% smaller than DiM; the mean predicted untreated outcome mu0(X) differs by +0.2710 pp (SE 0.0080) between the treated and control arms; conversion: AIPW 0.1000 pp (95% CI 0.0932-0.1067) vs difference in means 0.1152 pp; DiM - AIPW = 0.0152 pp (paired SE 0.0016, z = 9.8), i.e. the adjusted effect is 13% smaller than DiM; the mean predicted untreated outcome mu0(X) differs by +0.0128 pp (SE 0.0014) between the treated and control arms. Covariate-adjusted estimates are primary. They remove bias only along the observed X. Possible mechanisms (hypotheses, not documented): per-test mixing and non-uniform, label-dependent negative sampling.",
+    "by_outcome": {
+      "visit": {
+        "dim": 0.010342403129198284,
+        "aipw": 0.00746115646659985,
+        "dim_minus_aipw": 0.002881246662598434,
+        "dim_minus_aipw_z": 34.36323994272422,
+        "aipw_below_dim_share": 0.2785858012500215,
+        "dim_over_aipw_ratio": 1.3861662297924515,
+        "prognostic_mu0_gap": 0.002709576162067094
+      },
+      "conversion": {
+        "dim": 0.0011518730521316279,
+        "aipw": 0.0009995824385001337,
+        "dim_minus_aipw": 0.00015229061363149416,
+        "dim_minus_aipw_z": 9.799425187947552,
+        "aipw_below_dim_share": 0.13221128261458057,
+        "dim_over_aipw_ratio": 1.1523542308926567,
+        "prognostic_mu0_gap": 0.00012784359881623866
+      }
+    }
+  },
+  "gaps_vs_dim": {
+    "note": "Gap = estimator - difference in means on the same rows; SE of the gap from the paired influence functions (the estimates are strongly correlated, so their separate SEs would overstate the gap's uncertainty). Only for estimators whose influence function accounts for nuisance estimation: Lin (OLS sandwich) and cross-fitted AIPW (Neyman-orthogonal). IPW with an estimated propensity is listed as a plain difference: its gap to DiM comes entirely from e_hat, which its IF treats as fixed, so a paired SE would be invalid.",
+    "visit": {
+      "ipw_hajek_lgbm": {
+        "gap": -0.002733187430083918,
+        "se_paired": null,
+        "gap_over_se_dim": -18.67997356243282
+      },
+      "ipw_hajek_lgbm_overfit": {
+        "gap": -0.0030346204777600555,
+        "se_paired": null,
+        "gap_over_se_dim": -20.74011817580861
+      },
+      "lin": {
+        "gap": -0.0028238932894013944,
+        "se_paired": 7.746324074187911e-05,
+        "ci95": [
+          -0.002975718451381233,
+          -0.0026720681274215556
+        ],
+        "z": -36.454623668677826,
+        "p_value": 5.811611661554004e-291,
+        "gap_over_se_dim": -19.299902893059144,
+        "gap_relative_to_dim": -0.2730403421840215
+      },
+      "aipw_lgbm": {
+        "gap": -0.002881246662598434,
+        "se_paired": 8.384676961196974e-05,
+        "ci95": [
+          -0.0030455833112579224,
+          -0.002716910013938946
+        ],
+        "z": -34.36323994272422,
+        "p_value": 8.933297526836382e-259,
+        "gap_over_se_dim": -19.69188460761143,
+        "gap_relative_to_dim": -0.2785858012500215
+      },
+      "aipw_design": {
+        "gap": -0.0029272189470493726,
+        "se_paired": 8.130842184727676e-05,
+        "ci95": [
+          -0.0030865805255098247,
+          -0.0027678573685889205
+        ],
+        "z": -36.00142372148886,
+        "p_value": 7.946976355943691e-284,
+        "gap_over_se_dim": -20.006082254174515,
+        "gap_relative_to_dim": -0.28303083050257033
+      }
+    },
+    "conversion": {
+      "ipw_hajek_lgbm": {
+        "gap": -0.00014489123098403167,
+        "se_paired": null,
+        "gap_over_se_dim": -4.215423500025442
+      },
+      "ipw_hajek_lgbm_overfit": {
+        "gap": -0.00017919345802801202,
+        "se_paired": null,
+        "gap_over_se_dim": -5.2134025564690925
+      },
+      "lin": {
+        "gap": -0.00016227496932350515,
+        "se_paired": 1.263681996382564e-05,
+        "ci95": [
+          -0.00018704268133172016,
+          -0.00013750725731529015
+        ],
+        "z": -12.841440313942593,
+        "p_value": 9.60703035680919e-38,
+        "gap_over_se_dim": -4.721180947296946,
+        "gap_relative_to_dim": -0.14087921322857852
+      },
+      "aipw_lgbm": {
+        "gap": -0.00015229061363149416,
+        "se_paired": 1.5540770066676817e-05,
+        "ci95": [
+          -0.00018274996325419885,
+          -0.00012183126400878947
+        ],
+        "z": -9.799425187947552,
+        "p_value": 1.1322813964297745e-22,
+        "gap_over_se_dim": -4.430698995208663,
+        "gap_relative_to_dim": -0.13221128261458057
+      },
+      "aipw_design": {
+        "gap": -0.0001506527967047816,
+        "se_paired": 1.3890169633420113e-05,
+        "ci95": [
+          -0.00017787702892543695,
+          -0.00012342856448412627
+        ],
+        "z": -10.846001213858974,
+        "p_value": 2.083420940731013e-27,
+        "gap_over_se_dim": -4.383048824009797,
+        "gap_relative_to_dim": -0.1307894098451103
+      }
+    }
+  },
+  "estimators": {
+    "dim": {
+      "label": "Difference in means",
+      "treatment": "binary assignment T",
+      "outcome_model": "none",
+      "propensity": "not used",
+      "estimand": "ATE of assignment (ad eligibility) = ITT, in this benchmark sample",
+      "assumptions": "T randomized independently of (Y(0), Y(1)) and X; SUTVA (no interference, one version of treatment)",
+      "se_method": "Neyman sqrt(s1^2/n1 + s0^2/n0)",
+      "limitations": "ignores covariates (not the most precise unbiased estimator); invalid without randomization"
+    },
+    "lin": {
+      "label": "Lin regression adjustment",
+      "treatment": "binary assignment T, interacted with centered X",
+      "outcome_model": "linear in the linear design matrix, separate slopes per arm (OLS)",
+      "propensity": "not used",
+      "estimand": "ATE of assignment (ad eligibility) = ITT, in this benchmark sample",
+      "assumptions": "T randomized independently of (Y(0), Y(1)) and X; SUTVA (no interference, one version of treatment); the linear model need not be correct (Lin 2013)",
+      "se_method": "HC2 sandwich (HC0/HC1 also reported)",
+      "limitations": "only the linear part of E[Y|X] reduces variance; small R^2 for rare binary outcomes"
+    },
+    "g_comp_s_lgbm": {
+      "label": "g-computation (S-learner LightGBM)",
+      "treatment": "T as a feature of one model",
+      "outcome_model": "LightGBM classifier on (X, T), cross-fitted",
+      "propensity": "not used",
+      "estimand": "ATE of assignment (ad eligibility) = ITT, in this benchmark sample",
+      "assumptions": "conditional ignorability T indep. (Y(0), Y(1)) | X (implied by randomization here); positivity 0 < e(x) < 1; SUTVA; outcome model correctly specified (no residual correction)",
+      "se_method": "none (plug-in ML estimator; fold spread reported as descriptive only)",
+      "limitations": "regularization can shrink a small T effect toward 0 (plug-in bias)"
+    },
+    "ipw_ht_design": {
+      "label": "IPW Horvitz-Thompson, design e = 0.85",
+      "treatment": "binary assignment T",
+      "outcome_model": "none",
+      "propensity": "known design value 0.85",
+      "estimand": "ATE of assignment (ad eligibility) = ITT, in this benchmark sample",
+      "assumptions": "T randomized independently of (Y(0), Y(1)) and X; SUTVA (no interference, one version of treatment)",
+      "se_method": "influence function, e fixed",
+      "limitations": "differs from DiM only through n_T/n - 0.85; not location invariant"
+    },
+    "ipw_hajek_design": {
+      "label": "IPW Hajek, design e = 0.85",
+      "treatment": "binary assignment T",
+      "outcome_model": "none",
+      "propensity": "known design value 0.85",
+      "estimand": "ATE of assignment (ad eligibility) = ITT, in this benchmark sample",
+      "assumptions": "T randomized independently of (Y(0), Y(1)) and X; SUTVA (no interference, one version of treatment)",
+      "se_method": "linearized influence function, e fixed",
+      "limitations": "identical to the difference in means (constant weights within arm)"
+    },
+    "ipw_ht_logistic": {
+      "label": "IPW Horvitz-Thompson, logistic e",
+      "treatment": "binary assignment T",
+      "outcome_model": "none",
+      "propensity": "logistic regression, cross-fitted, clipped",
+      "estimand": "ATE of assignment (ad eligibility) = ITT, in this benchmark sample",
+      "assumptions": "conditional ignorability T indep. (Y(0), Y(1)) | X (implied by randomization here); positivity 0 < e(x) < 1; SUTVA; propensity model correct",
+      "se_method": "influence function, e treated as fixed (conservative)",
+      "limitations": "high variance with extreme weights; not location invariant"
+    },
+    "ipw_hajek_logistic": {
+      "label": "IPW Hajek, logistic e",
+      "treatment": "binary assignment T",
+      "outcome_model": "none",
+      "propensity": "logistic regression, cross-fitted, clipped",
+      "estimand": "ATE of assignment (ad eligibility) = ITT, in this benchmark sample",
+      "assumptions": "conditional ignorability T indep. (Y(0), Y(1)) | X (implied by randomization here); positivity 0 < e(x) < 1; SUTVA; propensity model correct",
+      "se_method": "linearized influence function, e treated as fixed (conservative)",
+      "limitations": "biased if the propensity model is misspecified"
+    },
+    "ipw_ht_lgbm": {
+      "label": "IPW Horvitz-Thompson, LightGBM e",
+      "treatment": "binary assignment T",
+      "outcome_model": "none",
+      "propensity": "LightGBM, cross-fitted, clipped",
+      "estimand": "ATE of assignment (ad eligibility) = ITT, in this benchmark sample",
+      "assumptions": "conditional ignorability T indep. (Y(0), Y(1)) | X (implied by randomization here); positivity 0 < e(x) < 1; SUTVA; propensity model consistent",
+      "se_method": "influence function, e treated as fixed (conservative)",
+      "limitations": "high variance with extreme weights; not location invariant"
+    },
+    "ipw_hajek_lgbm": {
+      "label": "IPW Hajek, LightGBM e",
+      "treatment": "binary assignment T",
+      "outcome_model": "none",
+      "propensity": "LightGBM, cross-fitted, clipped",
+      "estimand": "ATE of assignment (ad eligibility) = ITT, in this benchmark sample",
+      "assumptions": "conditional ignorability T indep. (Y(0), Y(1)) | X (implied by randomization here); positivity 0 < e(x) < 1; SUTVA; propensity model consistent",
+      "se_method": "linearized influence function, e treated as fixed (conservative)",
+      "limitations": "biased if the propensity model is inconsistent"
+    },
+    "ipw_hajek_lgbm_overfit": {
+      "label": "IPW Hajek, LightGBM e without early stopping",
+      "treatment": "binary assignment T",
+      "outcome_model": "none",
+      "propensity": "LightGBM with a fixed tree budget, no early stopping (sensitivity)",
+      "estimand": "ATE of assignment (ad eligibility) = ITT, in this benchmark sample",
+      "assumptions": "conditional ignorability T indep. (Y(0), Y(1)) | X (implied by randomization here); positivity 0 < e(x) < 1; SUTVA; propensity model consistent",
+      "se_method": "linearized influence function, e treated as fixed",
+      "limitations": "sensitivity check: noise fitted into e(x) is amplified by 1/(1-e) in the small control arm"
+    },
+    "aipw_design": {
+      "label": "AIPW, LightGBM mu + design e",
+      "treatment": "binary assignment T",
+      "outcome_model": "per-arm LightGBM classifiers, cross-fitted",
+      "propensity": "known design value 0.85",
+      "estimand": "ATE of assignment (ad eligibility) = ITT, in this benchmark sample",
+      "assumptions": "T randomized independently of (Y(0), Y(1)) and X; SUTVA (no interference, one version of treatment); unbiased for any outcome model only if 0.85 is the true e(x) -- the balance checks show it is not exactly",
+      "se_method": "efficient influence function",
+      "limitations": "gain over DiM limited by how much of Var(Y) the outcome models explain"
+    },
+    "aipw_lgbm": {
+      "label": "AIPW, LightGBM mu + LightGBM e",
+      "treatment": "binary assignment T",
+      "outcome_model": "per-arm LightGBM classifiers, cross-fitted",
+      "propensity": "LightGBM, cross-fitted, clipped",
+      "estimand": "ATE of assignment (ad eligibility) = ITT, in this benchmark sample",
+      "assumptions": "conditional ignorability T indep. (Y(0), Y(1)) | X (implied by randomization here); positivity 0 < e(x) < 1; SUTVA; either e or mu consistent (double robustness); cross-fitting",
+      "se_method": "efficient influence function",
+      "limitations": "asymptotic SE; extreme weights inflate variance"
+    },
+    "dim_ml_sample": {
+      "label": "Difference in means (ML subsample)",
+      "treatment": "binary assignment T",
+      "outcome_model": "none",
+      "propensity": "not used",
+      "estimand": "ATE of assignment (ad eligibility) = ITT, in this benchmark sample",
+      "assumptions": "T randomized independently of (Y(0), Y(1)) and X; SUTVA (no interference, one version of treatment)",
+      "se_method": "Neyman",
+      "limitations": "reference for the ML estimators when they run on a subsample"
+    }
+  },
+  "estimates": {
+    "visit": {
+      "dim": {
+        "estimate": 0.010342403129198284,
+        "se": 0.00014631645066032718,
+        "ci95": [
+          0.010055628155558312,
+          0.010629178102838257
+        ],
+        "n": 13979592,
+        "n_t": 11882655,
+        "n_c": 2096937,
+        "mean_t": 0.048543360048743316,
+        "mean_c": 0.03820095691954503,
+        "se_ratio_vs_dim": 1.0
+      },
+      "ipw_ht_design": {
+        "estimate": 0.010342443274088543,
+        "se": 0.00014931527648908072,
+        "ci95": [
+          0.010049790709828305,
+          0.010635095838348782
+        ],
+        "n": 13979592,
+        "se_ratio_vs_dim": 1.0204954795938517
+      },
+      "ipw_hajek_design": {
+        "estimate": 0.010342403129198312,
+        "se": 0.0001463164262218645,
+        "ci95": [
+          0.010055628203456846,
+          0.010629178054939778
+        ],
+        "n": 13979592,
+        "mean_t": 0.04854336004874333,
+        "mean_c": 0.03820095691954502,
+        "se_ratio_vs_dim": 0.9999998329752905
+      },
+      "lin": {
+        "estimate": 0.00751850983979689,
+        "se": 0.0001298460221330939,
+        "ci95": [
+          0.007264016312880235,
+          0.007773003366713545
+        ],
+        "se_hc0": 0.00012982727193589042,
+        "se_hc1": 0.00012982891575092926,
+        "se_hc2": 0.0001298460221330939,
+        "n": 13979592,
+        "n_params": 354,
+        "max_leverage": 0.038508940679222683,
+        "r2_by_arm": {
+          "treatment": 0.3034556065828453,
+          "control": 0.2711127231200182
+        },
+        "n_covariates": 176,
+        "se_ratio_vs_dim": 0.8874328316952597
+      },
+      "ipw_ht_logistic": {
+        "estimate": 0.0077163086382980575,
+        "se": 0.00015660978867633937,
+        "ci95": [
+          0.007409359092866004,
+          0.008023258183730111
+        ],
+        "n": 13979592,
+        "se_ratio_vs_dim": 1.0703498340040254
+      },
+      "ipw_hajek_logistic": {
+        "estimate": 0.007685948647575838,
+        "se": 0.00015323105679557636,
+        "ci95": [
+          0.007385621294943497,
+          0.00798627600020818
+        ],
+        "n": 13979592,
+        "mean_t": 0.04800743599586339,
+        "mean_c": 0.040321487348287555,
+        "se_ratio_vs_dim": 1.0472578859317836
+      },
+      "ipw_ht_lgbm": {
+        "estimate": 0.007621482882970201,
+        "se": 0.00015758205301492,
+        "ci95": [
+          0.007312627734451077,
+          0.007930338031489325
+        ],
+        "n": 13979592,
+        "se_ratio_vs_dim": 1.0769947760743996
+      },
+      "ipw_hajek_lgbm": {
+        "estimate": 0.007609215699114366,
+        "se": 0.00015413708807558702,
+        "ci95": [
+          0.007307112557804338,
+          0.007911318840424396
+        ],
+        "n": 13979592,
+        "mean_t": 0.047943883798336175,
+        "mean_c": 0.04033466809922181,
+        "se_ratio_vs_dim": 1.0534501580646964
+      },
+      "ipw_hajek_lgbm_overfit": {
+        "estimate": 0.0073077826514382285,
+        "se": 0.0001561216822331483,
+        "ci95": [
+          0.007001789777055451,
+          0.007613775525821006
+        ],
+        "n": 13979592,
+        "mean_t": 0.04792554684993028,
+        "mean_c": 0.04061776419849205,
+        "se_ratio_vs_dim": 1.0670138697909226
+      },
+      "aipw_lgbm": {
+        "estimate": 0.00746115646659985,
+        "se": 0.00012760940915320182,
+        "ci95": [
+          0.007211046620571138,
+          0.0077112663126285615
+        ],
+        "n": 13979592,
+        "relative_lift": {
+          "estimate": 0.18442332977771536,
+          "se": 0.00365016254286147,
+          "ci95": [
+            0.17726914265598973,
+            0.191577516899441
+          ],
+          "mean_y1": 0.0479178409630394,
+          "mean_y0": 0.04045668449643955
+        },
+        "se_ratio_vs_dim": 0.8721466969523908
+      },
+      "aipw_design": {
+        "estimate": 0.007415184182148911,
+        "se": 0.00012137529011951674,
+        "ci95": [
+          0.007177292984901558,
+          0.007653075379396265
+        ],
+        "n": 13979592,
+        "relative_lift": {
+          "estimate": 0.183072447753458,
+          "se": 0.003454061473143915,
+          "ci95": [
+            0.17630261166570854,
+            0.18984228384120744
+          ],
+          "mean_y1": 0.04791928118387182,
+          "mean_y0": 0.04050409700172291
+        },
+        "se_ratio_vs_dim": 0.8295396011299426
+      },
+      "g_comp_s_lgbm": {
+        "estimate": 0.007326539809052517,
+        "se": null,
+        "ci95": [
+          null,
+          null
+        ],
+        "n": 13979592,
+        "fold_estimates": [
+          0.007335255773576358,
+          0.00728944272288356,
+          0.007276810311205971,
+          0.007414886416033737,
+          0.007316303831713875
+        ],
+        "fold_spread_se_descriptive": 2.4325997403034535e-05,
+        "se_note": "no valid SE; fold spread is descriptive only (understates uncertainty)",
+        "se_ratio_vs_dim": null
+      },
+      "outcome_model_fit": {
+        "auc_mu_observed_arm": 0.9468891476720606,
+        "mean_cate_t_learner": 0.007418549603625972,
+        "mean_cate_s_learner": 0.007326539809052517,
+        "share_s_learner_cate_exactly_zero": 0.0,
+        "trees_per_fold": {
+          "mu1": [
+            193,
+            238,
+            319,
+            110,
+            248
+          ],
+          "mu0": [
+            63,
+            54,
+            102,
+            63,
+            63
+          ],
+          "s_learner": [
+            400,
+            325,
+            186,
+            166,
+            242
+          ]
+        }
+      },
+      "prognostic_balance": {
+        "mu0": {
+          "estimate": 0.002709576162067094,
+          "se": 8.012533463722964e-05,
+          "ci95": [
+            0.0025525333919289043,
+            0.002866618932205284
+          ],
+          "n": 13979592,
+          "mean_a": 0.04090533523435079,
+          "mean_b": 0.038195759072283696
+        },
+        "mu1": {
+          "estimate": 0.004160529339034533,
+          "se": 8.927102107340527e-05,
+          "ci95": [
+            0.003985561352867542,
+            0.0043354973252015235
+          ],
+          "n": 13979592,
+          "mean_a": 0.04854152762769842,
+          "mean_b": 0.04438099828866389
+        },
+        "note": "mean cross-fitted predicted outcome, treated minus control arm; SEs treat predictions as fixed. Under randomization both should be ~0."
+      }
+    },
+    "conversion": {
+      "dim": {
+        "estimate": 0.0011518730521316279,
+        "se": 3.4371690289992735e-05,
+        "ci95": [
+          0.001084505777075477,
+          0.0012192403271877787
+        ],
+        "n": 13979592,
+        "n_t": 11882655,
+        "n_c": 2096937,
+        "mean_t": 0.0030894610674129645,
+        "mean_c": 0.0019375880152813366,
+        "se_ratio_vs_dim": 1.0
+      },
+      "ipw_ht_design": {
+        "estimate": 0.0011518751833414892,
+        "se": 3.4407991781068585e-05,
+        "ci95": [
+          0.0010844367586702447,
+          0.0012193136080127338
+        ],
+        "n": 13979592,
+        "se_ratio_vs_dim": 1.0010561450650106
+      },
+      "ipw_hajek_design": {
+        "estimate": 0.0011518730521316292,
+        "se": 3.4371684804427256e-05,
+        "ci95": [
+          0.0010845057878269891,
+          0.0012192403164362692
+        ],
+        "n": 13979592,
+        "mean_t": 0.0030894610674129653,
+        "mean_c": 0.0019375880152813362,
+        "se_ratio_vs_dim": 0.999999840404547
+      },
+      "lin": {
+        "estimate": 0.0009895980828081227,
+        "se": 3.402981584090045e-05,
+        "ci95": [
+          0.0009229008693594273,
+          0.0010562952962568182
+        ],
+        "se_hc0": 3.4010095619162525e-05,
+        "se_hc1": 3.4010526239831186e-05,
+        "se_hc2": 3.402981584090045e-05,
+        "n": 13979592,
+        "n_params": 354,
+        "max_leverage": 0.038508940679222683,
+        "r2_by_arm": {
+          "treatment": 0.1266306184473327,
+          "control": 0.11926056331768908
+        },
+        "n_covariates": 176,
+        "se_ratio_vs_dim": 0.9900536038173303
+      },
+      "ipw_ht_logistic": {
+        "estimate": 0.0009693107437379337,
+        "se": 3.694076305127812e-05,
+        "ci95": [
+          0.0008969081785960006,
+          0.0010417133088798667
+        ],
+        "n": 13979592,
+        "se_ratio_vs_dim": 1.0747438586700335
+      },
+      "ipw_hajek_logistic": {
+        "estimate": 0.0009676104490063601,
+        "se": 3.690961998332044e-05,
+        "ci95": [
+          0.0008952689231559922,
+          0.001039951974856728
+        ],
+        "n": 13979592,
+        "mean_t": 0.003053318363845866,
+        "mean_c": 0.002085707914839506,
+        "se_ratio_vs_dim": 1.0738377912728552
+      },
+      "ipw_ht_lgbm": {
+        "estimate": 0.0010075924277146945,
+        "se": 3.654527184965584e-05,
+        "ci95": [
+          0.0009359650110841436,
+          0.0010792198443452454
+        ],
+        "n": 13979592,
+        "se_ratio_vs_dim": 1.0632375522217463
+      },
+      "ipw_hajek_lgbm": {
+        "estimate": 0.0010069818211475962,
+        "se": 3.6512355048490525e-05,
+        "ci95": [
+          0.0009354189202618156,
+          0.001078544722033377
+        ],
+        "n": 13979592,
+        "mean_t": 0.003046858974539156,
+        "mean_c": 0.0020398771533915597,
+        "se_ratio_vs_dim": 1.062279880344466
+      },
+      "ipw_hajek_lgbm_overfit": {
+        "estimate": 0.0009726795941036159,
+        "se": 3.7980550002716635e-05,
+        "ci95": [
+          0.0008982390839852686,
+          0.0010471201042219632
+        ],
+        "n": 13979592,
+        "mean_t": 0.0030477252802718693,
+        "mean_c": 0.0020750456861682535,
+        "se_ratio_vs_dim": 1.1049951190144005
+      },
+      "aipw_lgbm": {
+        "estimate": 0.0009995824385001337,
+        "se": 3.444580930950269e-05,
+        "ci95": [
+          0.000932069892835174,
+          0.0010670949841650936
+        ],
+        "n": 13979592,
+        "relative_lift": {
+          "estimate": 0.4880919630207581,
+          "se": 0.02373014545363148,
+          "ci95": [
+            0.44158173258374345,
+            0.5346021934577727
+          ],
+          "mean_y1": 0.00304752117593356,
+          "mean_y0": 0.002047938737433426
+        },
+        "se_ratio_vs_dim": 1.0021563972817342
+      },
+      "aipw_design": {
+        "estimate": 0.0010012202554268463,
+        "se": 3.247823289478186e-05,
+        "ci95": [
+          0.0009375640886715698,
+          0.0010648764221821228
+        ],
+        "n": 13979592,
+        "relative_lift": {
+          "estimate": 0.489293958244311,
+          "se": 0.02221012136998155,
+          "ci95": [
+            0.44576292026688374,
+            0.5328249962217382
+          ],
+          "mean_y1": 0.0030474753512784994,
+          "mean_y0": 0.0020462550958516524
+        },
+        "se_ratio_vs_dim": 0.9449122990683366
+      },
+      "g_comp_s_lgbm": {
+        "estimate": 0.0009772411158589765,
+        "se": null,
+        "ci95": [
+          null,
+          null
+        ],
+        "n": 13979592,
+        "fold_estimates": [
+          0.0009603837526028815,
+          0.0009890911392648413,
+          0.0009900826725116494,
+          0.0009629819894025768,
+          0.00098366602730388
+        ],
+        "fold_spread_se_descriptive": 6.457946664016918e-06,
+        "se_note": "no valid SE; fold spread is descriptive only (understates uncertainty)",
+        "se_ratio_vs_dim": null
+      },
+      "outcome_model_fit": {
+        "auc_mu_observed_arm": 0.945845907806039,
+        "mean_cate_t_learner": 0.0009923703151601144,
+        "mean_cate_s_learner": 0.0009772411158589765,
+        "share_s_learner_cate_exactly_zero": 4.2919707527945023e-07,
+        "trees_per_fold": {
+          "mu1": [
+            400,
+            386,
+            159,
+            262,
+            232
+          ],
+          "mu0": [
+            39,
+            39,
+            181,
+            65,
+            35
+          ],
+          "s_learner": [
+            256,
+            206,
+            247,
+            255,
+            205
+          ]
+        }
+      },
+      "prognostic_balance": {
+        "mu0": {
+          "estimate": 0.00012784359881623866,
+          "se": 1.3822546534067347e-05,
+          "ci95": [
+            0.00010075190543483771,
+            0.00015493529219763963
+          ],
+          "n": 13979592,
+          "mean_a": 0.0020713909781920614,
+          "mean_b": 0.0019435473793758228
+        },
+        "mu1": {
+          "estimate": 0.0002799050174177274,
+          "se": 1.8059716654804878e-05,
+          "ci95": [
+            0.00024450862320331165,
+            0.0003153014116321432
+          ],
+          "n": 13979592,
+          "mean_a": 0.0030865704865631048,
+          "mean_b": 0.0028066654691453773
+        },
+        "note": "mean cross-fitted predicted outcome, treated minus control arm; SEs treat predictions as fixed. Under randomization both should be ~0."
+      }
+    }
+  },
+  "identity_checks": {
+    "visit": {
+      "hajek_design_minus_dim": 2.7755575615628914e-17,
+      "ht_design_minus_dim": 4.0144890259274923e-08
+    },
+    "conversion": {
+      "hajek_design_minus_dim": 1.3010426069826053e-18,
+      "ht_design_minus_dim": 2.131209861366834e-09
+    },
+    "treated_share_minus_design": 1.2875912258625277e-07,
+    "note": "Hajek IPW with a constant propensity equals the difference in means exactly (constant weights cancel within arm); Horvitz-Thompson differs only because the realized treated share is not exactly the design value."
+  },
+  "propensity": {
+    "design_propensity": 0.85,
+    "clip_bounds": [
+      0.01,
+      0.99
+    ],
+    "sample": "all rows (n=13,979,592)",
+    "folds": 5,
+    "lightgbm": {
+      "by_arm": {
+        "treatment": {
+          "n": 11882655,
+          "mean": 0.8501080120655029,
+          "sd": 0.00923830418585057,
+          "quantiles": {
+            "q00": 0.7430664574546901,
+            "q01": 0.8447830420160688,
+            "q05": 0.8455472924268933,
+            "q25": 0.8464587685078386,
+            "q50": 0.8485868154382433,
+            "q75": 0.8491894171781786,
+            "q95": 0.8622403961086867,
+            "q99": 0.8973210322151819,
+            "q100": 0.9871280533735652
+          },
+          "ipw_ess": 11881410.02684708,
+          "ipw_ess_ratio": 0.9998952276950799,
+          "max_weight_share": 9.626860553460951e-08
+        },
+        "control": {
+          "n": 2096937,
+          "mean": 0.8494593050656731,
+          "sd": 0.0070210517287733545,
+          "quantiles": {
+            "q00": 0.7543600006722951,
+            "q01": 0.8447830420160688,
+            "q05": 0.8455472924268933,
+            "q25": 0.8463747269580152,
+            "q50": 0.8485518941483391,
+            "q75": 0.8491300453474293,
+            "q95": 0.8581545182648517,
+            "q99": 0.8843898625404034,
+            "q100": 0.982921301184469
+          },
+          "ipw_ess": 2085144.160665622,
+          "ipw_ess_ratio": 0.9943761594485776,
+          "max_weight_share": 4.1897774481593706e-06
+        }
+      },
+      "min": 0.7430664574546901,
+      "max": 0.9871280533735652,
+      "share_below_clip": 0.0,
+      "share_above_clip": 0.0,
+      "clip_bounds": [
+        0.01,
+        0.99
+      ],
+      "auc_treatment_vs_control": 0.5103882113411075,
+      "mean_e_minus_mean_t": 1.0577339932815732e-05,
+      "design_propensity": 0.85,
+      "mean_abs_deviation_from_design": 0.003862891007935364,
+      "share_within_0.02_of_design": 0.9677170835887056,
+      "auc_delong": {
+        "auc": 0.5103882113411075,
+        "se_delong": 0.0002142807626543111,
+        "ci95_delong": [
+          0.5099682287637253,
+          0.5108081939184896
+        ],
+        "se_null": 0.0002162202335574331,
+        "z_null": 48.04458477447767,
+        "p_value_one_sided_analytic": 0.0,
+        "n_pos": 11882655,
+        "n_neg": 2096937,
+        "distinct_scores": 1390869
+      },
+      "trees_per_fold": [
+        32,
+        39,
+        44,
+        41,
+        40
+      ]
+    },
+    "logistic": {
+      "by_arm": {
+        "treatment": {
+          "n": 11882655,
+          "mean": 0.8498851300666722,
+          "sd": 0.008265523235577582,
+          "quantiles": {
+            "q00": 0.7872868776321411,
+            "q01": 0.8365991115570068,
+            "q05": 0.8415727019309998,
+            "q25": 0.8454253673553467,
+            "q50": 0.8481718897819519,
+            "q75": 0.8517052531242371,
+            "q95": 0.865935343503952,
+            "q99": 0.8828752589225768,
+            "q100": 0.9682166576385498
+          },
+          "ipw_ess": 11881579.885359652,
+          "ipw_ess_ratio": 0.9999095223550336,
+          "max_weight_share": 9.083925469125552e-08
+        },
+        "control": {
+          "n": 2096937,
+          "mean": 0.8494879610824365,
+          "sd": 0.007557867199220855,
+          "quantiles": {
+            "q00": 0.7867366075515747,
+            "q01": 0.8365719795227051,
+            "q05": 0.841540515422821,
+            "q25": 0.845348060131073,
+            "q50": 0.8480489253997803,
+            "q75": 0.8514759540557861,
+            "q95": 0.863767123222351,
+            "q99": 0.8788524937629699,
+            "q100": 0.9674453139305115
+          },
+          "ipw_ess": 2089597.924762833,
+          "ipw_ess_ratio": 0.9965000974100953,
+          "max_weight_share": 2.198372304834734e-06
+        }
+      },
+      "min": 0.7867366075515747,
+      "max": 0.9682166576385498,
+      "share_below_clip": 0.0,
+      "share_above_clip": 0.0,
+      "clip_bounds": [
+        0.01,
+        0.99
+      ],
+      "auc_treatment_vs_control": 0.5084100339109116,
+      "mean_e_minus_mean_t": -0.00017457398894660248,
+      "design_propensity": 0.85,
+      "mean_abs_deviation_from_design": 0.005320125069633889,
+      "share_within_0.02_of_design": 0.9648516923812941,
+      "auc_delong": {
+        "auc": 0.5084100339109114,
+        "se_delong": 0.00021441892818964168,
+        "ci95_delong": [
+          0.5079897805340561,
+          0.5088302872877668
+        ],
+        "se_null": 0.00021622564702708576,
+        "z_null": 38.89471034792625,
+        "p_value_one_sided_analytic": 0.0,
+        "n_pos": 11882655,
+        "n_neg": 2096937,
+        "distinct_scores": 683906
+      }
+    },
+    "lightgbm_no_early_stopping": {
+      "by_arm": {
+        "treatment": {
+          "n": 11882655,
+          "mean": 0.8501197165240184,
+          "sd": 0.010305533572095776,
+          "quantiles": {
+            "q00": 0.4895384437191093,
+            "q01": 0.8400198042890498,
+            "q05": 0.8445938441782131,
+            "q25": 0.8463743079528797,
+            "q50": 0.848551259838502,
+            "q75": 0.849523977493336,
+            "q95": 0.8639108466856212,
+            "q99": 0.9008443015456197,
+            "q100": 0.996148991619505
+          },
+          "ipw_ess": 11881100.667994656,
+          "ipw_ess_ratio": 0.9998691932059507,
+          "max_weight_share": 1.4612336056051346e-07
+        },
+        "control": {
+          "n": 2096937,
+          "mean": 0.8494296932730335,
+          "sd": 0.008006136342131967,
+          "quantiles": {
+            "q00": 0.6468021680711211,
+            "q01": 0.840037300112936,
+            "q05": 0.844569450688419,
+            "q25": 0.8463333082622265,
+            "q50": 0.848497759516555,
+            "q75": 0.8494769432926134,
+            "q95": 0.8598421199286989,
+            "q99": 0.8872711031578421,
+            "q100": 0.9887966520732098
+          },
+          "ipw_ess": 2078706.9361061535,
+          "ipw_ess_ratio": 0.9913063368647478,
+          "max_weight_share": 6.38109637644106e-06
+        }
+      },
+      "min": 0.4895384437191093,
+      "max": 0.996148991619505,
+      "share_below_clip": 0.0,
+      "share_above_clip": 1.2089050953704515e-05,
+      "clip_bounds": [
+        0.01,
+        0.99
+      ],
+      "auc_treatment_vs_control": 0.5100408067239514,
+      "mean_e_minus_mean_t": 1.6084366094792912e-05,
+      "design_propensity": 0.85,
+      "mean_abs_deviation_from_design": 0.004368307086140673,
+      "share_within_0.02_of_design": 0.962607349341812,
+      "config": {
+        "n_estimators": 200,
+        "learning_rate": 0.1,
+        "n_jobs": 6
+      },
+      "auc_delong": {
+        "auc": 0.5100408067239514,
+        "se_delong": 0.0002142809478755391,
+        "ci95_delong": [
+          0.5096208237835422,
+          0.5104607896643605
+        ],
+        "se_null": 0.00021622559390157002,
+        "z_null": 46.436717054513544,
+        "p_value_one_sided_analytic": 0.0,
+        "n_pos": 11882655,
+        "n_neg": 2096937,
+        "distinct_scores": 2673933
+      }
+    }
+  },
+  "exposure": {
+    "assumptions": {
+      "random_assignment": "T randomized (instrument independent of potential outcomes and exposures)",
+      "exclusion_restriction": "assignment affects visit/conversion only through ad exposure",
+      "monotonicity": "no defiers; trivially true because control users cannot be exposed",
+      "relevance": "first stage P(E=1|T=1) - P(E=1|T=0) != 0",
+      "sutva": "no interference between users"
+    },
+    "why_naive_is_biased": "Exposure is not randomized: among eligible users, those who are online more (and so more likely to visit or buy anyway) are more likely to be shown an ad. Exposed-vs-control compares these high-baseline users with an average user; exposed-vs-unexposed-treated compares them with the low-activity users who were never reached. Both mix the ad effect with baseline differences (E[Y(0)|exposed] > E[Y(0)]); the IV uses only the randomized contrast and rescales it by the first stage.",
+    "visit": {
+      "itt": {
+        "estimate": 0.010342403129198284,
+        "se": 0.00014631645066032718,
+        "ci95": [
+          0.010055628155558312,
+          0.010629178102838257
+        ],
+        "n": 13979592,
+        "n_t": 11882655,
+        "n_c": 2096937,
+        "mean_t": 0.048543360048743316,
+        "mean_c": 0.03820095691954503,
+        "se_ratio_vs_dim": 1.0
+      },
+      "iv_wald": {
+        "itt_y": 0.010342403129198284,
+        "itt_d_first_stage": 0.036036727482199896,
+        "late": 0.28699618005843747,
+        "se_delta": 0.004022446869266023,
+        "ci95_delta": [
+          0.27911232906495015,
+          0.2948800310519248
+        ],
+        "one_sided_noncompliance": true,
+        "first_stage_f": 444220.2064865135,
+        "n": 13979592,
+        "complier_mean_treated": 0.4145376589166114,
+        "complier_mean_untreated": 0.1275414788581739,
+        "complier_relative_lift": 2.2502183809361123,
+        "bootstrap": {
+          "reps": 2000,
+          "method": "exact stratified bootstrap via multinomial (D,Y) cell counts",
+          "ci95_percentile": [
+            0.2787945851010925,
+            0.29466914348699014
+          ],
+          "se": 0.004007107172845515,
+          "complier_mean_untreated_ci95": [
+            0.12010939215748555,
+            0.13574091369239003
+          ],
+          "complier_relative_lift_ci95": [
+            2.0548549123098137,
+            2.4515966598156123
+          ]
+        }
+      },
+      "iv_wald_covariate_adjusted": {
+        "late": 0.2117264140756097,
+        "se": 0.0036034313645428436,
+        "ci95": [
+          0.2046638183803437,
+          0.21878900977087568
+        ],
+        "itt_y_aipw": 0.00746115646659985,
+        "itt_d_aipw": {
+          "estimate": 0.035239610981818235,
+          "se": 5.225535220812141e-05,
+          "ci95": [
+            0.03513719237349086,
+            0.03534202959014561
+          ],
+          "n": 13979592
+        },
+        "method": "ratio of cross-fitted AIPW effects of assignment on the outcome and on exposure; SE from the influence function of the ratio (delta method on paired IFs)"
+      },
+      "itt_aipw": {
+        "estimate": 0.00746115646659985,
+        "se": 0.00012760940915320182,
+        "ci95": [
+          0.007211046620571138,
+          0.0077112663126285615
+        ],
+        "n": 13979592,
+        "relative_lift": {
+          "estimate": 0.18442332977771536,
+          "se": 0.00365016254286147,
+          "ci95": [
+            0.17726914265598973,
+            0.191577516899441
+          ],
+          "mean_y1": 0.0479178409630394,
+          "mean_y0": 0.04045668449643955
+        },
+        "se_ratio_vs_dim": 0.8721466969523908
+      },
+      "naive_exposed_vs_control": {
+        "estimate": 0.37633670199706637,
+        "se": 0.0007643882150490501,
+        "ci95": [
+          0.3748385286253634,
+          0.37783487536876936
+        ],
+        "n": 2525149,
+        "mean_a": 0.4145376589166114,
+        "mean_b": 0.03820095691954503
+      },
+      "naive_exposed_vs_unexposed_treated": {
+        "estimate": 0.3796766010720702,
+        "se": 0.0007547881244372748,
+        "ci95": [
+          0.37819724353221457,
+          0.3811559586119258
+        ],
+        "n": 11882655,
+        "mean_a": 0.4145376589166114,
+        "mean_b": 0.034861057844541195
+      },
+      "selection_bias_exposed_vs_control": 0.0893405219386289,
+      "selection_bias_exposed_vs_unexposed": 0.09268042101363272,
+      "rates": {
+        "exposed_treated": 0.4145376589166114,
+        "unexposed_treated": 0.034861057844541195,
+        "control": 0.03820095691954503
+      }
+    },
+    "conversion": {
+      "itt": {
+        "estimate": 0.0011518730521316279,
+        "se": 3.4371690289992735e-05,
+        "ci95": [
+          0.001084505777075477,
+          0.0012192403271877787
+        ],
+        "n": 13979592,
+        "n_t": 11882655,
+        "n_c": 2096937,
+        "mean_t": 0.0030894610674129645,
+        "mean_c": 0.0019375880152813366,
+        "se_ratio_vs_dim": 1.0
+      },
+      "iv_wald": {
+        "itt_y": 0.0011518730521316279,
+        "itt_d_first_stage": 0.036036727482199896,
+        "late": 0.031963863885825596,
+        "se_delta": 0.0009510303724118537,
+        "ci95_delta": [
+          0.030099878607694648,
+          0.03382784916395654
+        ],
+        "one_sided_noncompliance": true,
+        "first_stage_f": 444220.2064865135,
+        "n": 13979592,
+        "complier_mean_treated": 0.053784106937685074,
+        "complier_mean_untreated": 0.021820243051859478,
+        "complier_relative_lift": 1.46487203693644,
+        "bootstrap": {
+          "reps": 2000,
+          "method": "exact stratified bootstrap via multinomial (D,Y) cell counts",
+          "ci95_percentile": [
+            0.03008910194836052,
+            0.03377793188244387
+          ],
+          "se": 0.0009563778723818397,
+          "complier_mean_untreated_ci95": [
+            0.020105223614098253,
+            0.023588282778002307
+          ],
+          "complier_relative_lift_ci95": [
+            1.277492009312072,
+            1.6788933059284217
+          ]
+        }
+      },
+      "iv_wald_covariate_adjusted": {
+        "late": 0.02836530854486064,
+        "se": 0.0009760954126549144,
+        "ci95": [
+          0.02645219669058225,
+          0.030278420399139035
+        ],
+        "itt_y_aipw": 0.0009995824385001337,
+        "itt_d_aipw": {
+          "estimate": 0.035239610981818235,
+          "se": 5.225535220812141e-05,
+          "ci95": [
+            0.03513719237349086,
+            0.03534202959014561
+          ],
+          "n": 13979592
+        },
+        "method": "ratio of cross-fitted AIPW effects of assignment on the outcome and on exposure; SE from the influence function of the ratio (delta method on paired IFs)"
+      },
+      "itt_aipw": {
+        "estimate": 0.0009995824385001337,
+        "se": 3.444580930950269e-05,
+        "ci95": [
+          0.000932069892835174,
+          0.0010670949841650936
+        ],
+        "n": 13979592,
+        "relative_lift": {
+          "estimate": 0.4880919630207581,
+          "se": 0.02373014545363148,
+          "ci95": [
+            0.44158173258374345,
+            0.5346021934577727
+          ],
+          "mean_y1": 0.00304752117593356,
+          "mean_y0": 0.002047938737433426
+        },
+        "se_ratio_vs_dim": 1.0021563972817342
+      },
+      "naive_exposed_vs_control": {
+        "estimate": 0.05184651892240374,
+        "se": 0.0003460761686444133,
+        "ci95": [
+          0.05116822209595308,
+          0.0525248157488544
+        ],
+        "n": 2525149,
+        "mean_a": 0.053784106937685074,
+        "mean_b": 0.0019375880152813366
+      },
+      "naive_exposed_vs_unexposed_treated": {
+        "estimate": 0.05258981054108159,
+        "se": 0.00034489220940643443,
+        "ci95": [
+          0.051913834232096535,
+          0.053265786850066645
+        ],
+        "n": 11882655,
+        "mean_a": 0.053784106937685074,
+        "mean_b": 0.0011942963966034839
+      },
+      "selection_bias_exposed_vs_control": 0.019882655036578142,
+      "selection_bias_exposed_vs_unexposed": 0.020625946655255994,
+      "rates": {
+        "exposed_treated": 0.053784106937685074,
+        "unexposed_treated": 0.0011942963966034839,
+        "control": 0.0019375880152813366
+      }
+    }
+  },
+  "observational_demo": {
+    "design": "Uniform draw of base_rows users per seed; controls kept with probability decreasing in the confounder score z, treated users with the complementary probability so the overall keep rate is constant in z. Selection depends on (X, T) only: T is ignorable given X in the selected sample, its covariate distribution matches the RCT, and the RCT ATE is the target.",
+    "confounder": {
+      "feature": "f0",
+      "orientation": -1,
+      "outcome": "visit",
+      "auc_by_candidate": {
+        "f0": 0.3401414490202309,
+        "f2": 0.6125972917889537,
+        "f7": 0.5634811374728137,
+        "f10": 0.6287006661610635
+      }
+    },
+    "config": {
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "base_rows": 1500000,
+      "confounder_candidates": [
+        "f0",
+        "f2",
+        "f7",
+        "f10"
+      ],
+      "control_keep": [
+        1.0,
+        0.1
+      ],
+      "treated_keep_low": 0.5,
+      "folds": 3
+    },
+    "benchmarks": {
+      "dim": {
+        "visit": {
+          "estimate": 0.010342403129198284,
+          "ci95": [
+            0.010055628155558312,
+            0.010629178102838257
+          ]
+        },
+        "conversion": {
+          "estimate": 0.0011518730521316279,
+          "ci95": [
+            0.001084505777075477,
+            0.0012192403271877787
+          ]
+        }
+      },
+      "aipw": {
+        "visit": {
+          "estimate": 0.00746115646659985,
+          "ci95": [
+            0.007211046620571138,
+            0.0077112663126285615
+          ]
+        },
+        "conversion": {
+          "estimate": 0.0009995824385001337,
+          "ci95": [
+            0.000932069892835174,
+            0.0010670949841650936
+          ]
+        }
+      }
+    },
+    "benchmark_note": "Benchmarks are full-data estimates with their own sampling error, positively correlated with each replicate (same users), so coverage is approximate.",
+    "balance": [
+      {
+        "seed": 0,
+        "n_selected": 862617,
+        "treated_share": 0.856254861659346,
+        "smd_confounder_raw": 0.5833678367961785,
+        "smd_confounder_ipw_lgbm": 0.03324317471530493,
+        "corr_e_hat_e_true": 0.9891215914261048,
+        "e_true_range": [
+          0.7391305130434782,
+          0.9427814173913044
+        ]
+      },
+      {
+        "seed": 1,
+        "n_selected": 863454,
+        "treated_share": 0.8559981191817978,
+        "smd_confounder_raw": 0.5843009840641271,
+        "smd_confounder_ipw_lgbm": 0.029882217177706748,
+        "corr_e_hat_e_true": 0.9893898296887306,
+        "e_true_range": [
+          0.7391306695652172,
+          0.9427936260869565
+        ]
+      },
+      {
+        "seed": 2,
+        "n_selected": 862740,
+        "treated_share": 0.8563217191737951,
+        "smd_confounder_raw": 0.5830933945617208,
+        "smd_confounder_ipw_lgbm": 0.026892266733445587,
+        "corr_e_hat_e_true": 0.9887525827329755,
+        "e_true_range": [
+          0.7391305130434782,
+          0.9428192956521739
+        ]
+      },
+      {
+        "seed": 3,
+        "n_selected": 862954,
+        "treated_share": 0.8561000934001117,
+        "smd_confounder_raw": 0.5805568260140626,
+        "smd_confounder_ipw_lgbm": 0.032320528505764806,
+        "corr_e_hat_e_true": 0.9899018843081008,
+        "e_true_range": [
+          0.7391305130434782,
+          0.9427891652173913
+        ]
+      },
+      {
+        "seed": 4,
+        "n_selected": 862122,
+        "treated_share": 0.8559391826214852,
+        "smd_confounder_raw": 0.5834943559394361,
+        "smd_confounder_ipw_lgbm": 0.02366024910454565,
+        "corr_e_hat_e_true": 0.9898656166162169,
+        "e_true_range": [
+          0.7391306695652172,
+          0.9428146
+        ]
+      },
+      {
+        "seed": 5,
+        "n_selected": 862743,
+        "treated_share": 0.8563569915954113,
+        "smd_confounder_raw": 0.5800142856106352,
+        "smd_confounder_ipw_lgbm": 0.02561287788690488,
+        "corr_e_hat_e_true": 0.9897700873431114,
+        "e_true_range": [
+          0.7391305130434782,
+          0.9427558260869564
+        ]
+      },
+      {
+        "seed": 6,
+        "n_selected": 862173,
+        "treated_share": 0.856019615552795,
+        "smd_confounder_raw": 0.5856795303937826,
+        "smd_confounder_ipw_lgbm": 0.0370988915835993,
+        "corr_e_hat_e_true": 0.9892590933239427,
+        "e_true_range": [
+          0.7391305130434782,
+          0.9428279826086957
+        ]
+      },
+      {
+        "seed": 7,
+        "n_selected": 862287,
+        "treated_share": 0.8569443816269989,
+        "smd_confounder_raw": 0.5887261052881221,
+        "smd_confounder_ipw_lgbm": 0.011029833319621207,
+        "corr_e_hat_e_true": 0.9875423071732982,
+        "e_true_range": [
+          0.7391306695652172,
+          0.9427231130434783
+        ]
+      },
+      {
+        "seed": 8,
+        "n_selected": 862729,
+        "treated_share": 0.8559362209917599,
+        "smd_confounder_raw": 0.5830851536621894,
+        "smd_confounder_ipw_lgbm": 0.03335098878527978,
+        "corr_e_hat_e_true": 0.9887803184466247,
+        "e_true_range": [
+          0.7391306695652172,
+          0.9427865043478261
+        ]
+      },
+      {
+        "seed": 9,
+        "n_selected": 862564,
+        "treated_share": 0.8561463265334515,
+        "smd_confounder_raw": 0.580563218406817,
+        "smd_confounder_ipw_lgbm": 0.016747995414135824,
+        "corr_e_hat_e_true": 0.9879692284039316,
+        "e_true_range": [
+          0.7391305130434782,
+          0.942755747826087
+        ]
+      },
+      {
+        "seed": 10,
+        "n_selected": 863461,
+        "treated_share": 0.8565007568378884,
+        "smd_confounder_raw": 0.5853119301388793,
+        "smd_confounder_ipw_lgbm": 0.027480204066597402,
+        "corr_e_hat_e_true": 0.9897453494859912,
+        "e_true_range": [
+          0.739130904347826,
+          0.9428104521739131
+        ]
+      },
+      {
+        "seed": 11,
+        "n_selected": 862210,
+        "treated_share": 0.8563412625694437,
+        "smd_confounder_raw": 0.5848862476330428,
+        "smd_confounder_ipw_lgbm": 0.02161053762144331,
+        "corr_e_hat_e_true": 0.9897407079154934,
+        "e_true_range": [
+          0.7391305130434782,
+          0.9427879130434782
+        ]
+      },
+      {
+        "seed": 12,
+        "n_selected": 861561,
+        "treated_share": 0.8563758108828046,
+        "smd_confounder_raw": 0.5833097380767934,
+        "smd_confounder_ipw_lgbm": 0.02377030975227534,
+        "corr_e_hat_e_true": 0.989241089483,
+        "e_true_range": [
+          0.7391305130434782,
+          0.9427414260869565
+        ]
+      },
+      {
+        "seed": 13,
+        "n_selected": 863509,
+        "treated_share": 0.856886262910983,
+        "smd_confounder_raw": 0.5844842542618154,
+        "smd_confounder_ipw_lgbm": 0.03034284024589664,
+        "corr_e_hat_e_true": 0.989765866256891,
+        "e_true_range": [
+          0.7391305913043478,
+          0.9427961304347826
+        ]
+      },
+      {
+        "seed": 14,
+        "n_selected": 862670,
+        "treated_share": 0.856394681627969,
+        "smd_confounder_raw": 0.5799329831868605,
+        "smd_confounder_ipw_lgbm": 0.025471331923625325,
+        "corr_e_hat_e_true": 0.9898259717468195,
+        "e_true_range": [
+          0.7391305130434782,
+          0.9427605217391304
+        ]
+      },
+      {
+        "seed": 15,
+        "n_selected": 863137,
+        "treated_share": 0.8563507299536458,
+        "smd_confounder_raw": 0.583869792483363,
+        "smd_confounder_ipw_lgbm": 0.02881068663836185,
+        "corr_e_hat_e_true": 0.9901463319256748,
+        "e_true_range": [
+          0.7391306695652172,
+          0.9427944086956522
+        ]
+      }
+    ],
+    "summary": {
+      "visit": {
+        "naive_dim": {
+          "mean_estimate": 0.021865435798014275,
+          "sd_estimate": 0.00048305618709280543,
+          "mean_se": 0.00053812553480813,
+          "sd_over_mean_se": 0.8976644961942575,
+          "replicates": 16,
+          "vs_dim": {
+            "bias": 0.011523032668815991,
+            "bias_se": 0.00012076404677320136,
+            "rmse": 0.011532521025842362,
+            "bias_over_mean_se": 21.41327984542595,
+            "coverage": 0.0,
+            "covered": 0
+          },
+          "vs_aipw": {
+            "bias": 0.014404279331414426,
+            "bias_se": 0.00012076404677320136,
+            "rmse": 0.01441187088418115,
+            "bias_over_mean_se": 26.767507578970967,
+            "coverage": 0.0,
+            "covered": 0
+          }
+        },
+        "lin": {
+          "mean_estimate": 0.007479519645225219,
+          "sd_estimate": 0.0007030389411359169,
+          "mean_se": 0.0006567696007430408,
+          "sd_over_mean_se": 1.070449881268148,
+          "replicates": 16,
+          "vs_dim": {
+            "bias": -0.002862883483973065,
+            "bias_se": 0.00017575973528397923,
+            "rmse": 0.002942698440379539,
+            "bias_over_mean_se": -4.359037751951555,
+            "coverage": 0.0,
+            "covered": 0
+          },
+          "vs_aipw": {
+            "bias": 1.836317862536908e-05,
+            "bias_se": 0.00017575973528397923,
+            "rmse": 0.0006809621682117473,
+            "bias_over_mean_se": 0.027959848635798267,
+            "coverage": 0.875,
+            "covered": 14
+          }
+        },
+        "ipw_hajek_known_selection": {
+          "mean_estimate": 0.010309459935376557,
+          "sd_estimate": 0.0007743420773169585,
+          "mean_se": 0.0007365958326720815,
+          "sd_over_mean_se": 1.05124417349464,
+          "replicates": 16,
+          "vs_dim": {
+            "bias": -3.2943193821725284e-05,
+            "bias_se": 0.00019358551932923963,
+            "rmse": 0.0007504768840069273,
+            "bias_over_mean_se": -0.04472356801452469,
+            "coverage": 0.9375,
+            "covered": 15
+          },
+          "vs_aipw": {
+            "bias": 0.002848303468776709,
+            "bias_se": 0.00019358551932923963,
+            "rmse": 0.0029453290053328514,
+            "bias_over_mean_se": 3.866847112675316,
+            "coverage": 0.0625,
+            "covered": 1
+          }
+        },
+        "ipw_hajek_lgbm": {
+          "mean_estimate": 0.00781895798366881,
+          "sd_estimate": 0.0007581515196877219,
+          "mean_se": 0.0007686472380711935,
+          "sd_over_mean_se": 0.9863452077056712,
+          "replicates": 16,
+          "vs_dim": {
+            "bias": -0.0025234451455294744,
+            "bias_se": 0.00018953787992193047,
+            "rmse": 0.0026280495660043726,
+            "bias_over_mean_se": -3.2829691183977796,
+            "coverage": 0.0625,
+            "covered": 1
+          },
+          "vs_aipw": {
+            "bias": 0.00035780151706895974,
+            "bias_se": 0.00018953787992193047,
+            "rmse": 0.0008166339721664481,
+            "bias_over_mean_se": 0.46549509234796665,
+            "coverage": 0.875,
+            "covered": 14
+          }
+        },
+        "aipw_lgbm": {
+          "mean_estimate": 0.007493460886183952,
+          "sd_estimate": 0.0007821260682461156,
+          "mean_se": 0.0006387342652286976,
+          "sd_over_mean_se": 1.2244936757323908,
+          "replicates": 16,
+          "vs_dim": {
+            "bias": -0.002848942243014332,
+            "bias_se": 0.0001955315170615289,
+            "rmse": 0.0029478738976586633,
+            "bias_over_mean_se": -4.460293424205563,
+            "coverage": 0.0,
+            "covered": 0
+          },
+          "vs_aipw": {
+            "bias": 3.230441958410193e-05,
+            "bias_se": 0.00019553151706152888,
+            "rmse": 0.000757979015534342,
+            "bias_over_mean_se": 0.05057567965691553,
+            "coverage": 0.875,
+            "covered": 14
+          }
+        }
+      },
+      "conversion": {
+        "naive_dim": {
+          "mean_estimate": 0.0017861154558180073,
+          "sd_estimate": 0.00013839357810103224,
+          "mean_se": 0.00012596301904949092,
+          "sd_over_mean_se": 1.0986841943400654,
+          "replicates": 16,
+          "vs_dim": {
+            "bias": 0.0006342424036863795,
+            "bias_se": 3.459839452525806e-05,
+            "rmse": 0.00064824313354617,
+            "bias_over_mean_se": 5.0351476843944605,
+            "coverage": 0.0,
+            "covered": 0
+          },
+          "vs_aipw": {
+            "bias": 0.0007865330173178737,
+            "bias_se": 3.459839452525806e-05,
+            "rmse": 0.0007978658539422775,
+            "bias_over_mean_se": 6.24415819224565,
+            "coverage": 0.0,
+            "covered": 0
+          }
+        },
+        "lin": {
+          "mean_estimate": 0.0010114547479406926,
+          "sd_estimate": 0.00015312487408133136,
+          "mean_se": 0.0001673777388457017,
+          "sd_over_mean_se": 0.9148461147661371,
+          "replicates": 16,
+          "vs_dim": {
+            "bias": -0.0001404183041909354,
+            "bias_se": 3.828121852033284e-05,
+            "rmse": 0.00020420351496210876,
+            "bias_over_mean_se": -0.8389305839552591,
+            "coverage": 0.875,
+            "covered": 14
+          },
+          "vs_aipw": {
+            "bias": 1.1872309440558786e-05,
+            "bias_se": 3.828121852033284e-05,
+            "rmse": 0.00014873710734875306,
+            "bias_over_mean_se": 0.07093123328367672,
+            "coverage": 1.0,
+            "covered": 16
+          }
+        },
+        "ipw_hajek_known_selection": {
+          "mean_estimate": 0.0011715443149934572,
+          "sd_estimate": 0.00016788262197563067,
+          "mean_se": 0.0001660402259837796,
+          "sd_over_mean_se": 1.0110960821748765,
+          "replicates": 16,
+          "vs_dim": {
+            "bias": 1.967126286182929e-05,
+            "bias_se": 4.197065549390767e-05,
+            "rmse": 0.0001637375870757946,
+            "bias_over_mean_se": 0.11847287454156422,
+            "coverage": 1.0,
+            "covered": 16
+          },
+          "vs_aipw": {
+            "bias": 0.00017196187649332344,
+            "bias_se": 4.197065549390767e-05,
+            "rmse": 0.00023663035689853754,
+            "bias_over_mean_se": 1.0356639511567656,
+            "coverage": 0.75,
+            "covered": 12
+          }
+        },
+        "ipw_hajek_lgbm": {
+          "mean_estimate": 0.0009959134413223384,
+          "sd_estimate": 0.00019652916862245785,
+          "mean_se": 0.00017892202221546285,
+          "sd_over_mean_se": 1.0984068153767679,
+          "replicates": 16,
+          "vs_dim": {
+            "bias": -0.0001559596108092895,
+            "bias_se": 4.913229215561446e-05,
+            "rmse": 0.0002460348190617638,
+            "bias_over_mean_se": -0.8716624643414694,
+            "coverage": 0.8125,
+            "covered": 13
+          },
+          "vs_aipw": {
+            "bias": -3.6689971777953124e-06,
+            "bias_se": 4.913229215561446e-05,
+            "rmse": 0.0001903239173810283,
+            "bias_over_mean_se": -0.020506124021876997,
+            "coverage": 1.0,
+            "covered": 16
+          }
+        },
+        "aipw_lgbm": {
+          "mean_estimate": 0.0010163458402090517,
+          "sd_estimate": 0.00016547582650671886,
+          "mean_se": 0.000167815555333613,
+          "sd_over_mean_se": 0.9860577356953423,
+          "replicates": 16,
+          "vs_dim": {
+            "bias": -0.00013552721192257598,
+            "bias_se": 4.1368956626679714e-05,
+            "rmse": 0.00020985348164185514,
+            "bias_over_mean_se": -0.8075962425125095,
+            "coverage": 0.875,
+            "covered": 14
+          },
+          "vs_aipw": {
+            "bias": 1.6763401708918173e-05,
+            "bias_se": 4.1368956626679714e-05,
+            "rmse": 0.00016109584172956226,
+            "bias_over_mean_se": 0.09989182275500601,
+            "coverage": 1.0,
+            "covered": 16
+          }
+        }
+      }
+    }
+  },
+  "timings_seconds": {
+    "lin": 20.068064208000578,
+    "propensity_lgbm": 80.00007458400069,
+    "propensity_lgbm_overfit": 196.3900219160023,
+    "propensity_logistic": 13.218115208001109,
+    "exposure_model": 328.37585254200167,
+    "outcome_models_visit": 471.4013921250007,
+    "outcome_models_conversion": 418.5600274589997,
+    "observational_demo": 263.52800004200253
+  },
+  "figures": [
+    "results/figures/causal_forest.png",
+    "results/figures/causal_propensity.png",
+    "results/figures/causal_obs_demo.png",
+    "results/figures/causal_exposure_iv.png"
+  ]
+}
