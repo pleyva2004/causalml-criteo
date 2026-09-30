@@ -12,7 +12,7 @@ y_val)`` takes no other data) and are then applied, frozen, to test scores.
 
 from __future__ import annotations
 
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 from sklearn.isotonic import IsotonicRegression
@@ -38,7 +38,7 @@ class Calibrator:
         self.method = method
         self.floor = floor
 
-    def fit(self, p_val: np.ndarray, y_val: np.ndarray) -> "Calibrator":
+    def fit(self, p_val: np.ndarray, y_val: np.ndarray) -> Calibrator:
         y = np.asarray(y_val)
         if self.method == "sigmoid":
             # Platt scaling: logistic regression on the logit of the score (2 parameters), ~no penalty.

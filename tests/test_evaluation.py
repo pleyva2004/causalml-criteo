@@ -6,9 +6,18 @@ import numpy as np
 import pytest
 from sklearn.metrics import average_precision_score, brier_score_loss, log_loss, roc_auc_score
 
-from src.models.evaluation import (_RankState, bootstrap_ci, bootstrap_rank_metrics, classification_metrics,
-                                   expected_calibration_error, paired_diff, reliability_table, select_thresholds,
-                                   threshold_metrics, wilson_interval)
+from src.models.evaluation import (
+    _RankState,
+    bootstrap_ci,
+    bootstrap_rank_metrics,
+    classification_metrics,
+    expected_calibration_error,
+    paired_diff,
+    reliability_table,
+    select_thresholds,
+    threshold_metrics,
+    wilson_interval,
+)
 
 
 def _synthetic(n: int = 60_000, seed: int = 0) -> tuple[np.ndarray, np.ndarray]:

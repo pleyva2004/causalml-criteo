@@ -5,8 +5,17 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from src.optimization.targeting import (budget_mask, dim_value, eiv_mask, evaluate_masks, ht_value, ipw_value,
-                                        rank_of, tiebreak_key, value_metrics)
+from src.optimization.targeting import (
+    budget_mask,
+    dim_value,
+    eiv_mask,
+    evaluate_masks,
+    ht_value,
+    ipw_value,
+    rank_of,
+    tiebreak_key,
+    value_metrics,
+)
 
 P = 0.85
 
