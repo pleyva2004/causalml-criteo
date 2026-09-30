@@ -27,7 +27,6 @@ STAGES: dict[str, tuple[str, str]] = {
     "targeting": ("src.optimization.targeting", "run_targeting"),
     "robustness": ("src.robustness", "run_robustness"),
     "scaling": ("src.scaling", "run_scaling"),
-    "report": ("src.report", "run_report"),
 }
 
 

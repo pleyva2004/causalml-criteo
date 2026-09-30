@@ -4,7 +4,7 @@ MODE ?= full
 RUN = uv run causalml
 STAGES = eda stats predict causal cate targeting robustness scaling
 
-.PHONY: setup data $(STAGES) report all notebooks test lint requirements clean-dev
+.PHONY: setup data $(STAGES) all notebooks test lint requirements clean-dev
 
 setup:            ## create the environment from uv.lock
 	uv sync
@@ -15,12 +15,10 @@ data:             ## download from Kaggle, validate, split, write parquet
 $(STAGES):
 	$(RUN) $@ --mode $(MODE)
 
-report:           ## regenerate README result tables from results/metrics/*.json
-	$(RUN) report --mode $(MODE)
+all: $(STAGES)
 
-all: $(STAGES) report
-
-notebooks:        ## execute the notebooks in place (they read results/ and the dev sample)
+notebooks:        ## rebuild and execute the notebooks in place (they read results/ and the dev sample)
+	uv run python notebooks/build_notebooks.py
 	uv run jupyter nbconvert --to notebook --execute --inplace notebooks/*.ipynb
 
 test:
