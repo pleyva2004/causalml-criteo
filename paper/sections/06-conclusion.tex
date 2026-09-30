@@ -1,0 +1,36 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We worked through the classical statistical-ML workflow on 14M randomized
+advertising users and asked whether ranking by causal effect beats ranking
+by response. For visits, yes at small budgets: the X-learner finds about
+60\,\% more incremental visits at a 5\,\% budget, provided it has at least 3M
+training rows. For conversions, no: no uplift learner beats ranking by
+conversion probability at any budget, because the ad lifts conversion in
+proportion to baseline propensity. Targeting still pays, since the top 10\,\%
+by conversion probability captures about 89\,\% of the lift of treating everyone
+at a tenth of the volume. Along the way, two corrections to naive analysis
+proved larger than any modeling choice: adjusting for imperfect
+randomization shrinks the visit effect by 28\,\%, and distinguishing assignment from
+exposure changes the estimand by an order of magnitude.
+
+\paragraph{Future work.} Several next steps are immediate.
+\begin{enumerate}
+  \item \textbf{Locate the imbalance mechanism.} Test whether the treatment
+        imbalance comes from per-test pooling or label-dependent
+        sub-sampling, for example by recovering test identity from the
+        categorical features and re-running the estimators within tests.
+  \item \textbf{Full-data causal forest.} Refit the causal forest and
+        logistic regression on all 8.39M rows to check whether the
+        conversion deficit of the forest is a sampling artifact.
+  \item \textbf{Composite targets.} Uplift on a value-weighted outcome
+        (visit-then-convert) might recover signal that neither outcome has
+        alone.
+  \item \textbf{Other splits and datasets.} Repeat the central comparison
+        across resampled splits and on other public uplift benchmarks to test
+        whether ``uplift wins on the dense outcome, not the sparse one'' holds
+        beyond Criteo.
+\end{enumerate}
+
+We release the code, configuration, test suite, and all full-data metrics,
+tables, and figures in the repository accompanying this paper.

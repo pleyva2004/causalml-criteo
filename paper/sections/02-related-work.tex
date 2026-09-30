@@ -1,0 +1,41 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Uplift and CATE benchmarks.} The dataset we use is the v2.1
+release of the Criteo benchmark of Diemert et
+al.~\cite{diemert2021}, who advise modeling uplift on visits because
+conversions are too sparse, and who note that uplift models need very large
+samples. We test both claims directly.
+
+\paragraph{Meta-learners and forests.} The S-, T-, and X-learners are
+surveyed and compared in K{\"u}nzel et al.~\cite{kunzel2019}. The DR-learner
+follows Kennedy~\cite{kennedy2023}, and the transformed-outcome approach
+follows Athey and Imbens~\cite{athey2015}. Honest causal forests are due to
+Wager and Athey~\cite{wager2018}; we use the orthogonalized variant in
+EconML~\cite{econml}, built on the double machine-learning framework of
+Chernozhukov et al.~\cite{chernozhukov2018}.
+
+\paragraph{Average-effect estimation.} For ATE we use regression adjustment
+with full interactions and robust standard errors~\cite{lin2013}, inverse
+propensity weighting~\cite{rosenbaum1983}, and augmented inverse-propensity
+weighting (AIPW), which is doubly robust~\cite{robins1994}. The effect of
+actually seeing an ad uses randomized assignment as an
+instrument~\cite{imbens1994}.
+
+\paragraph{Evaluating uplift.} Because the individual effect is never
+observed, uplift rankings are scored with Qini and AUUC
+curves~\cite{radcliffe2007}. We complement them with the best-linear-predictor
+and sorted-group tests of Chernozhukov et al.~\cite{chernozhukov2018gates},
+which ask whether estimated effects carry real heterogeneity and whether
+they are calibrated.
+
+\paragraph{Randomization checks.} To test whether treatment is predictable
+from covariates we use a classifier two-sample test~\cite{lopezpaz2017}.
+
+\paragraph{Advertising measurement.} Gordon et al.~\cite{gordon2019} compare
+observational approaches to randomized field experiments in advertising and
+find that adjustment often fails to recover the experimental answer. Our
+observational demonstration (Section~\ref{sec:ate}) is in that spirit.
+
+\paragraph{Gradient boosting.} LightGBM~\cite{ke2017} is our workhorse
+base learner for every predictive and meta-learner model.

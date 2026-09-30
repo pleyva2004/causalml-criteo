@@ -1,0 +1,118 @@
+\section{Method}
+\label{sec:method}
+
+\subsection{Data}
+\label{sec:data}
+
+Table~\ref{tab:data} summarizes the Criteo Uplift v2.1 benchmark
+\cite{diemert2021}. It merges several advertisers' incrementality tests; in
+each, a random share of users is held out from ad targeting. Version 2.1
+re-sampled every test to a common treatment ratio to remove a leak in v1.
+Rows were sub-sampled non-uniformly for privacy, so all rates describe the
+benchmark sample, not real-world ad incrementality.
+
+\begin{table}[H]
+\centering
+\caption{The Criteo Uplift v2.1 dataset as used here.}
+\label{tab:data}
+\small
+\begin{tabular}{l p{9.5cm}}
+\toprule
+\textbf{Item} & \textbf{Value} \\
+\midrule
+Users & 13,979,592; split 60/20/20 into 8.39M train, 2.80M validation,
+        2.80M test, stratified on treatment $\times$ visit $\times$ conversion \\
+Features & 12 anonymized: 4 continuous, 8 hashed categoricals with 60--3,743 levels \\
+\texttt{treatment} & randomized ad eligibility; 85.0\,\% treated \\
+\texttt{exposure} & shown $\ge 1$ ad; 3.60\,\% of treated users, 0 of control
+                    (post-randomization, self-selected) \\
+\texttt{visit} / \texttt{conversion} & 4.70\,\% / 0.29\,\% overall \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Pipeline}
+\label{sec:pipeline}
+
+Figure~\ref{fig:pipeline} shows the stages. Each reads a single
+configuration file (seeds, splits, sample sizes, model settings, business
+assumptions) and writes metrics, tables, and figures to disk; the narrative
+notebooks only read those outputs.
+
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{\input{figures/pipeline}}
+\caption{Analysis pipeline. Every stage uses the same stratified
+train/validation/test split.}
+\label{fig:pipeline}
+\end{figure}
+
+\subsection{Protocol}
+\label{sec:protocol}
+
+Features, calibrators, thresholds, hyperparameters, budget choices, and
+learner selection use only the train and validation splits. The test split
+is used once, for the reported numbers. Categorical levels seen fewer than
+1,000 times in the training split are pooled into an ``other'' level, and
+the feature builder never sees a label.
+
+Uncertainty comes from three sources: paired Poisson bootstraps over test
+users (uplift curves and policies), influence functions (ATE estimators),
+and refits with new seeds and disjoint training halves (robustness). Unless
+stated, intervals are 95\,\%.
+
+\subsection{Predictive models}
+\label{sec:predictive}
+
+We fit $P(\text{conversion}\mid X)$ with L2 logistic regression
+(interpretable baseline), a random forest on a 2M-row sample, and LightGBM
+on all 8.39M training rows with early stopping on validation
+\cite{ke2017}. Model selection uses five-fold cross-validated log loss, a
+proper scoring rule that is far less noisy than PR-AUC with about 0.3\,\%
+positives. Platt and isotonic calibrators are fit on validation and
+evaluated on test.
+
+\subsection{Average treatment effects}
+\label{sec:ate-method}
+
+Write $T$ for assignment, $Y$ for an outcome, and $X$ for features. The
+estimators are the difference in means, Lin regression adjustment
+\cite{lin2013} with HC2 standard errors, IPW (Horvitz--Thompson and
+H{\'a}jek) with design, logistic, and LightGBM propensities, and the doubly
+robust AIPW estimator~\cite{robins1994},
+\begin{equation}
+  \hat\tau_{\mathrm{AIPW}} = \frac{1}{n}\sum_{i=1}^{n}
+  \Big[\hat\mu_1(X_i)-\hat\mu_0(X_i)
+  + \frac{T_i\,(Y_i-\hat\mu_1(X_i))}{\hat e(X_i)}
+  - \frac{(1-T_i)\,(Y_i-\hat\mu_0(X_i))}{1-\hat e(X_i)}\Big],
+\end{equation}
+with cross-fitted LightGBM outcome models $\hat\mu_t$ and propensity
+$\hat e$; AIPW is our primary estimator. For the effect of actually seeing
+an ad, we use assignment $T$ as an instrument for exposure $D$, with a Wald
+estimator and a covariate-adjusted variant~\cite{imbens1994}. It estimates
+the effect on the exposed under the exclusion restriction that assignment
+affects outcomes only through ads shown.
+
+\subsection{Heterogeneous effects and uplift}
+\label{sec:cate-method}
+
+We implement S-, T-, X-, and DR-learners on LightGBM base learners, and fit
+an honest causal forest with EconML \cite{econml} on a 1M-row training
+sample. The transformed-outcome method is included as a class-variable
+baseline \cite{athey2015}. Every learner is compared with a
+\emph{response model} $P(Y\mid X)$ that ignores treatment. Rankings are
+scored by the normalized Qini coefficient, the area between the Qini curve
+and random targeting divided by the area of a perfect ranking, with
+propensity-weighted bootstrap intervals. We also report the BLP and GATES
+diagnostics~\cite{chernozhukov2018gates}.
+
+\subsection{Targeting policies}
+\label{sec:policy-method}
+
+Given a budget $b$ (share of users treated), each policy treats the top $b$
+by its score: random, highest conversion probability, highest estimated
+uplift, and highest expected value, which treats every user with
+$\hat\tau(X)\,V - c > 0$ for value $V$ and cost $c$. Policy value is
+estimated off-policy with propensity weights on the test split. For
+illustration, $V=\$50$ per conversion and $c=\$0.05$ per treated user; these
+are assumptions, not measurements.

@@ -1,0 +1,25 @@
+\begin{abstract}
+Advertisers usually target the users most likely to convert. The causal
+question is different: which users convert \emph{because of} the ad? We work
+through the full statistical-ML workflow on 13,979,592 users from Criteo's
+randomized incrementality tests (v2.1), from exploratory analysis and
+hypothesis tests through predictive models, average-treatment-effect (ATE)
+estimators, heterogeneous-effect (CATE) and uplift learners, and a
+budget-constrained targeting optimizer. Three findings stand out. First,
+randomization is imperfect in the pooled benchmark: treatment is weakly
+predictable from the features (classifier two-sample AUC 0.509), and
+covariate-adjusted estimators agree with each other while sitting 13--28\,\%
+below the raw treated-versus-control difference (doubly robust visit effect
++0.746\,pp against a raw +1.034\,pp). Second, assignment is not exposure: only
+3.6\,\% of eligible users were shown an ad, and using assignment as an
+instrument the effect of actually seeing an ad is +21.2\,pp on visits and
++2.84\,pp on conversions. Third, the central experiment has a split answer.
+For visits, uplift targeting at a 5\,\% budget finds 13,624 incremental
+visits against 8,542 for ranking by visit probability (+60\,\%); for
+conversions, no uplift learner beats ranking by conversion probability at any
+budget, because the ad lifts conversion roughly in proportion to baseline
+propensity. Targeting nevertheless pays: treating the top 10\,\% by
+conversion probability captures about 89\,\% of the lift of treating
+everyone. All estimates use a fixed train/validation/test protocol with
+bootstrap confidence intervals, and all code and results are released.
+\end{abstract}

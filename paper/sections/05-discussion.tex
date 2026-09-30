@@ -1,0 +1,80 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Why visits and conversions disagree}
+\label{sec:why-disagree}
+
+The same learners, data, and protocol give opposite verdicts on the two
+outcomes. Two mechanisms plausibly combine, and we cannot cleanly separate
+them with this dataset.
+
+\begin{enumerate}
+  \item \textbf{Signal.} Conversions are 0.29\,\% of users. The conversion
+        effect scores are far less stable across seeds (rank correlation
+        0.49 versus 0.98), so an uplift ranking for conversions is mostly
+        estimation noise layered on a signal that a simple response model
+        already captures.
+  \item \textbf{Structure.} Independently of noise, the share of conversions
+        that would have happened anyway is flat (about 67\,\%) across score
+        groups. When lift scales with baseline propensity, the response
+        ranking and the uplift ranking are nearly the same ranking, and
+        there is nothing for uplift to add.
+\end{enumerate}
+
+For visits the picture reverses: the highest-probability visitors are mostly
+``sure things'' (88\,\% would have visited anyway), and a model that sees
+treatment can move budget to users the ad actually changes. This matches the
+dataset authors' advice to model uplift on visits.
+
+\subsection{Randomization checks are not optional}
+\label{sec:imbalance}
+
+The pooled benchmark is advertised as randomized, and the headline
+difference in means would be reported as such. A classifier two-sample test
+and a joint likelihood-ratio test show that treatment is weakly but
+detectably predictable, and that the imbalance correlates with the outcomes.
+Correcting it moves the visit effect by 28\,\%. The observational
+demonstration shows the adjusted estimators do recover the answer when a
+known confounder is injected, which supports, but does not prove, that the
+adjustment is doing the right thing on the real imbalance.
+
+\subsection{Assignment, exposure, and what ``effect'' means}
+\label{sec:assignment}
+
+The intent-to-treat effect (assignment) and the effect of seeing an ad differ
+by more than an order of magnitude on visits, because 96.4\,\% of eligible
+users are never shown an ad. A targeting policy acts on eligibility, so the
+ATE and uplift results above are the operationally relevant ones; the
+instrumental-variable estimate answers a different question, about users who
+do get exposed.
+
+\subsection{Limitations}
+\label{sec:limitations}
+
+\paragraph{The data is a benchmark, not a live system.} Non-uniform
+sub-sampling, including negative sampling on labels, means absolute rates and
+effects are not real-world ad incrementality, and the business values in the
+targeting stage are assumptions.
+
+\paragraph{Adjustment has limits.} Treatment is only conditionally ignorable
+here, and adjusted estimators assume the 12 features capture the dependence
+between assignment and outcomes. If the sub-sampling depended on outcomes
+themselves, no feature adjustment fully corrects it. The mechanism behind
+the imbalance (per-test pooling or label-dependent sampling) is a
+hypothesis, not verified.
+
+\paragraph{Anonymized features.} Features are randomly projected, so
+heterogeneity findings describe feature segments, not interpretable user
+types.
+
+\paragraph{Exposure estimates rest on the exclusion restriction.} The IV
+estimates assume assignment affects outcomes only through ads shown.
+
+\paragraph{Subsampled models.} The random forest, logistic regression, and
+causal forest were trained on 1--2M-row samples for time. LightGBM and the
+meta-learners used all 8.39M training rows. The causal forest's weaker
+conversion result may partly reflect this.
+
+\paragraph{One dataset, one split.} Every result comes from a single
+stratified split. Seed and disjoint-half refits address estimator variance
+but not variation across alternative splits or other advertisers' data.
