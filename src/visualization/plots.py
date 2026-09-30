@@ -10,16 +10,16 @@ Conventions (applied by ``apply_style``):
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-from matplotlib.axes import Axes  # noqa: E402
-from matplotlib.figure import Figure  # noqa: E402
+import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
-from src.utils import figure_path  # noqa: E402
+from src.utils import figure_path
 
 # Validated categorical order (colorblind-safe on adjacent pairs); never cycle past 8.
 SERIES: list[str] = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"]
@@ -98,9 +98,9 @@ def format_count_axis(ax: Axes, axis: str = "x") -> None:
 
     def fmt(v: float, _pos: int) -> str:
         if v >= 1e6:
-            return f"{v / 1e6:g}M"
+            return f"{v / 1e6:.3g}M"
         if v >= 1e3:
-            return f"{v / 1e3:g}K"
+            return f"{v / 1e3:.3g}K"
         return f"{v:g}"
 
     target = ax.xaxis if axis == "x" else ax.yaxis
