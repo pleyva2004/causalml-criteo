@@ -25,7 +25,8 @@ enters a correlation or a distance it is represented by level frequency or by pe
 
 from __future__ import annotations
 
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -287,7 +288,7 @@ def balance_table(df: pd.DataFrame, continuous: Sequence[str], categorical: Sequ
             named = level_smd.loc[level_smd.index.notna()]
             row.update({"smd": float(named.abs().max()) if len(named) else 0.0, "smd_basis": "max |per-level indicator SMD|",
                         "ks_stat": np.nan, "ks_pvalue": np.nan, "chi2_stat": float(chi2), "chi2_pvalue": float(p),
-                        "cramers_v": v, "n_levels_tested": int(len(ct))})
+                        "cramers_v": v, "n_levels_tested": len(ct)})
         rows.append(row)
     out = pd.DataFrame(rows)
     out["abs_smd"] = out["smd"].abs()
@@ -393,7 +394,9 @@ def run_eda(mode: str = "dev") -> dict[str, Any]:
     Rates, balance and funnel use every row; histograms and Spearman correlations use a seeded uniform
     sample of ``eda.sample_rows`` (documented in config). Returns headline numbers.
     """
-    from src.visualization import eda_plots as P  # local import: keeps preprocess importable without matplotlib
+    from src.visualization import (
+        eda_plots as P,  # local import: keeps preprocess importable without matplotlib
+    )
 
     cfg, all_cfg = _cfg(), load_config()
     cont, cat = list(all_cfg["features"]["continuous"]), list(all_cfg["features"]["categorical"])
@@ -476,7 +479,7 @@ def run_eda(mode: str = "dev") -> dict[str, Any]:
         "balance": {"max_abs_smd": float(worst.abs_smd), "max_abs_smd_feature": worst.feature,
                     "interpretation": interpret_balance(bal, n, cfg["smd_thresholds"], int(df.treatment.sum()), int((df.treatment == 0).sum())),
                     "table": bal.drop(columns="abs_smd").to_dict("records")},
-        "sample_rows_for_histograms_and_correlations": int(len(sample)),
+        "sample_rows_for_histograms_and_correlations": len(sample),
         "spearman_note": "Hashed categoricals enter as log level-frequency because their numeric order is arbitrary.",
     }
     save_json(obj, "eda")

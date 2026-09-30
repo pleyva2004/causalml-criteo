@@ -51,7 +51,7 @@ import pandas as pd
 import pyarrow.parquet as pq
 
 from src.data.load import SPLIT_CODES, load_criteo
-from src.utils import (get_logger, load_config, load_json, repo_path, save_json, save_table, timer)
+from src.utils import get_logger, load_config, load_json, repo_path, save_json, save_table, timer
 
 log = get_logger(__name__)
 

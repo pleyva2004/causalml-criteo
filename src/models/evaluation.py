@@ -28,7 +28,6 @@ weights for every model -- so model differences are paired.
 from __future__ import annotations
 
 import time
-from typing import Callable, Sequence
 
 import numpy as np
 import pandas as pd
@@ -38,7 +37,7 @@ from sklearn.model_selection import StratifiedKFold
 from src.data.load import FEATURES, load_criteo, stratified_subsample
 from src.features.build_features import RAW_FEATURES, FeatureBuilder
 from src.models.baseline import LogisticBaseline
-from src.utils import (get_logger, load_config, repo_path, save_json, save_table, timer)
+from src.utils import get_logger, load_config, repo_path, save_json, save_table, timer
 
 log = get_logger(__name__)
 

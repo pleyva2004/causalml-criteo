@@ -10,10 +10,16 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.lines import Line2D
 
 from src.visualization.plots import (
-    AXIS, DIVERGING, INK, INK_2, MUTED, SERIES, color_for, new_figure, reference_line, save_fig,
+    DIVERGING,
+    INK,
+    INK_2,
+    MUTED,
+    SERIES,
+    color_for,
+    new_figure,
+    save_fig,
 )
 
 EXPOSURE_COLOR = SERIES[2]

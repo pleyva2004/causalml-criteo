@@ -8,8 +8,14 @@ import pytest
 
 from src.data.load import FEATURES
 from src.data.preprocess import (
-    balance_table, duplicate_counts, exposure_funnel, rates_by_group, spearman_matrix, standardized_mean_difference,
-    structural_violations, wilson_ci,
+    balance_table,
+    duplicate_counts,
+    exposure_funnel,
+    rates_by_group,
+    spearman_matrix,
+    standardized_mean_difference,
+    structural_violations,
+    wilson_ci,
 )
 
 

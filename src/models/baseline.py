@@ -34,7 +34,7 @@ class LogisticBaseline:
         self.C = C
         self.max_iter = max_iter if max_iter is not None else load_config()["predictive"]["lr_max_iter"]
 
-    def fit(self, df_raw: pd.DataFrame, y: np.ndarray) -> "LogisticBaseline":
+    def fit(self, df_raw: pd.DataFrame, y: np.ndarray) -> LogisticBaseline:
         self.fb_ = FeatureBuilder(kind="linear").fit(df_raw[RAW_FEATURES])
         X = self.fb_.transform(df_raw[RAW_FEATURES])
         # Columns constant on the training rows (rare one-hot levels in small samples) are dropped.

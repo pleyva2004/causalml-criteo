@@ -13,8 +13,17 @@ from matplotlib.colors import LinearSegmentedColormap
 from sklearn.metrics import precision_recall_curve, roc_curve
 
 from src.models.evaluation import reliability_table, row_log_loss
-from src.visualization.plots import (AXIS, GRID, INK_2, MUTED, SEQUENTIAL, SERIES, color_for, new_figure,
-                                     reference_line, save_fig, zero_line)
+from src.visualization.plots import (
+    INK_2,
+    MUTED,
+    SEQUENTIAL,
+    SERIES,
+    color_for,
+    new_figure,
+    reference_line,
+    save_fig,
+    zero_line,
+)
 
 ENTITY_EXTRA = {"lightgbm_weighted": SERIES[3]}
 LABELS = {"logistic_regression": "Logistic regression", "random_forest": "Random forest", "lightgbm": "LightGBM",

@@ -5,8 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from src.visualization.plots import (INK_2, MUTED, color_for, new_figure, reference_line, save_fig,
-                                     zero_line)
+from src.visualization.plots import INK_2, MUTED, color_for, new_figure, reference_line, save_fig, zero_line
 
 LABELS = {"random": "Random", "response": "Response (P(convert))", "uplift": "Uplift (tau_hat)",
           "expected_value": "Expected value (tau_hat*V - c > 0)", "treat_all": "Treat everyone",

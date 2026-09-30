@@ -48,7 +48,7 @@ class FeatureBuilder(BaseEstimator, TransformerMixin):
         self.max_onehot_levels = max_onehot_levels
         self.clip_quantiles = clip_quantiles
 
-    def fit(self, X: pd.DataFrame, y: object = None) -> "FeatureBuilder":
+    def fit(self, X: pd.DataFrame, y: object = None) -> FeatureBuilder:
         if self.kind not in ("tree", "linear"):
             raise ValueError(f"kind must be 'tree' or 'linear', got {self.kind!r}")
         missing = set(RAW_FEATURES) - set(X.columns)
