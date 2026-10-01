@@ -3,7 +3,8 @@
 **Can we identify users who convert *because of* an ad, rather than users who would have converted anyway?**
 
 📄 **Paper:** *Who Converts Because of the Ad? Uplift Targeting versus Response Targeting on 14 Million Criteo Users*
-([PDF](paper/main.pdf) · [LaTeX source](paper/main.tex)).
+([PDF](https://github.com/pleyva2004/causalml-criteo/blob/main/paper/main.pdf) ·
+[LaTeX source](paper/main.tex)).
 
 ![Uplift vs response targeting](results/figures/cate_response_vs_uplift.png)
 
